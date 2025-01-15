@@ -309,17 +309,52 @@ bool Image::SaveTGA(const char* filename)
 	return true;
 }
 
-void Image::DrawRect(int x, int y, int w, int h, const Color& c)
-{
+// DRAWLINEDDA FUNCTION
+void Image::DrawLineDDA(int x0, int y0, int x1, int y1, const Color& c) {
 
-	for (int i = 0; i < w; ++i) {
-		SetPixelUnsafe(x + i, y, c);
-		SetPixelUnsafe(x + i, y + h - 1, c);
+	int dx = x1 - x0;		// We calculate the director vector coordinates between p0 and p1
+	int dy = y1 - y0;
+
+	int steps = std::max(abs(dx), abs(dy));			// We calculate the steps for a diagonal line
+
+	float incrementX = dx / (float)steps;			// We calculate the direction step vector to advance in every iteration
+	float incrementY = dy / (float)steps;
+
+	float x = x0;		// We inicialize the coordinates
+	float y = y0;
+
+	for (int i = 0; i <= steps; i++) {
+		SetPixel(round(x), round(y), c);	// Here we draw the pixel in the actual coordenates
+
+		x += incrementX;		// We have to increment the coordenates to paint every pixel of the line
+		y += incrementY;
+	}
+}
+
+void Image::DrawRect(int x, int y, int w, int h, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor)
+{
+	// Dibujar el borde del rectángulo
+	for (int i = 0; i < borderWidth; ++i)
+	{
+		// Dibujar las líneas horizontales del borde
+		DrawLineDDA(x - i, y - i, x + w + i, y - i, borderColor); // Línea superior
+		DrawLineDDA(x - i, y + h + i, x + w + i, y + h + i, borderColor); // Línea inferior
+
+		// Dibujar las líneas verticales del borde
+		DrawLineDDA(x - i, y - i, x - i, y + h + i, borderColor); // Línea izquierda
+		DrawLineDDA(x + w + i, y - i, x + w + i, y + h + i, borderColor); // Línea derecha
 	}
 
-	for (int j = 0; j < h; ++j) {
-		SetPixelUnsafe(x, y + j, c);
-		SetPixelUnsafe(x + w - 1, y + j, c);
+	// Rellenar el rectángulo si es necesario
+	if (isFilled)
+	{
+		for (int i = x; i < x + w; ++i)
+		{
+			for (int j = y; j < y + h; ++j)
+			{
+				SetPixel(i, j, fillColor);
+			}
+		}
 	}
 }
 
