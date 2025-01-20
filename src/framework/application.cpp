@@ -1,3 +1,6 @@
+#include <cstdlib>
+#include <ctime>
+#include <random>
 #include "application.h"
 #include "mesh.h"
 #include "shader.h"
@@ -20,7 +23,7 @@ Application::Application(const char* caption, int width, int height)
 
 	this->framebuffer.Resize(w, h);
 
-	borderWidth = 1;		// WE INITIALIZE THE BORDERWIDTH TO 1 
+	borderWidth = 1;		// WE INITIALIZE THE BORDERWIDTH TO 1
 }
 
 Application::~Application()
@@ -36,6 +39,7 @@ void Application::Init(void)
 // Render one frame
 void Application::Render(void)
 {
+	/*
 	// ...
 	int x = 650;		// We have to define X and Y variables to start
 	int y = 300;
@@ -50,14 +54,16 @@ void Application::Render(void)
 	Vector2 p0 = { 450, 200 };
 	Vector2 p1 = { 600, 375 };
 	Vector2 p2 = { 400, 450 };
-	Color borderColor = Color::RED;
-	Color fillColor = Color::WHITE;		// With that we can change the fillColor of the triangle
+	Color borderColor = Color::BLUE;
+	Color fillColor = Color::CYAN;		// With that we can change the fillColor of the triangle
 	bool isFilled = true;
 
 	framebuffer.DrawTriangle(p0, p1, p2, borderColor, isFilled, fillColor);
 
 	/*framebuffer.Fill(Color::BLACK);
 	particleSystem.Render();*/
+
+	framebuffer.Fill(Color::BLACK);
 
 	framebuffer.Render();
 }
@@ -72,7 +78,7 @@ void Application::Update(float dt)
 void Application::OnKeyPressed( SDL_KeyboardEvent event )
 {
 	// KEY CODES: https://wiki.libsdl.org/SDL2/SDL_Keycode
-	switch(event.keysym.sym) {
+	switch (event.keysym.sym) {
 		case SDLK_ESCAPE: exit(0); break; // ESC key, kill the app
 
 		case SDLK_PLUS:
@@ -81,6 +87,36 @@ void Application::OnKeyPressed( SDL_KeyboardEvent event )
 		case SDLK_MINUS:
 		case SDLK_KP_MINUS: borderWidth = std::max(1, borderWidth - 1); break;		// TO REDUCE THE WIDTH BUT WE MAKE SURE IS HIGHER THAN 1
 
+		case SDLK_KP_1:
+		case SDLK_1: {
+			/*int x0 = rand() % window_width;
+			int y0 = rand() % window_height;
+			int x1 = rand() % window_width;
+			int y1 = rand() % window_height;*/
+			framebuffer.DrawLineDDA(300, 300, 400, 400, Color::WHITE); 
+			break;
+		}
+
+		case SDLK_KP_2:
+		case SDLK_2: {
+			int a = 200; 
+			int b = 200; 
+			int c = 100; 
+			int d = 50;
+
+			framebuffer.DrawRect(a, b, c, d, Color::RED, borderWidth, true, Color::GREEN);
+			break;
+		}
+
+		case SDLK_KP_3:
+		case SDLK_3: {
+			Vector2 p0 = { 450, 200 }; 
+			Vector2 p1 = { 600, 375 }; 
+			Vector2 p2 = { 400, 450 }; 
+			
+			framebuffer.DrawTriangle(p0, p1, p2, Color::BLUE, true, Color::CYAN);
+			break;
+		}
 	}
 }
 

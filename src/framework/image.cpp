@@ -337,16 +337,16 @@ void Image::DrawRect(int x, int y, int w, int h, const Color& borderColor, int b
 {
 	for (int i = 0; i < borderWidth; ++i)	// THAT PAINT THE TRIANGLE'S BORDER
 	{
-		// WE DRAW THE HORIZONTAL LINES OF THE TRIANGLE
+		// WE DRAW THE HORIZONTAL LINES OF THE RECTANGLE
 		DrawLineDDA(x - i, y - i, x + w + i, y - i, borderColor); 
 		DrawLineDDA(x - i, y + h + i, x + w + i, y + h + i, borderColor);
 
-		// WE DRAW THE VERTICAL LINES OF THE TRIANGLE
+		// WE DRAW THE VERTICAL LINES OF THE RECTANGLE
 		DrawLineDDA(x - i, y - i, x - i, y + h + i, borderColor);
 		DrawLineDDA(x + w + i, y - i, x + w + i, y + h + i, borderColor); 
 	}
 
-	// WE COMPLETE THE TRIANGLE'S INTERIOR
+	// WE COMPLETE THE RECTANGLE'S INTERIOR
 	if (isFilled)
 	{
 		for (int i = x; i < x + w; ++i)
