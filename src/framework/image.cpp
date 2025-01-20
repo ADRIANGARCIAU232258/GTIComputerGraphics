@@ -317,35 +317,36 @@ void Image::DrawLineDDA(int x0, int y0, int x1, int y1, const Color& c) {
 
 	int steps = std::max(abs(dx), abs(dy));			// We calculate the steps for a diagonal line
 
-	float incrementX = dx / (float)steps;			// We calculate the direction step vector to advance in every iteration
-	float incrementY = dy / (float)steps;
+	float incrementX = (float)dx / (float)steps;			// We calculate the direction step vector to advance in every iteration
+	float incrementY = (float)dy / (float)steps;
 
-	float x = x0;		// We inicialize the coordinates
-	float y = y0;
+	float x = (float)x0;		// We inicialize the coordinates
+	float y = (float)y0;
 
 	for (int i = 0; i <= steps; i++) {
-		SetPixel(round(x), round(y), c);	// Here we draw the pixel in the actual coordenates
+		SetPixel((unsigned int)round(x), (unsigned int)round(y), c);	// Here we draw the pixel in the actual coordenates
 
 		x += incrementX;		// We have to increment the coordenates to paint every pixel of the line
 		y += incrementY;
 	}
 }
 
+
+// DRAWRECT FUNTION 
 void Image::DrawRect(int x, int y, int w, int h, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor)
 {
-	// Dibujar el borde del rectángulo
-	for (int i = 0; i < borderWidth; ++i)
+	for (int i = 0; i < borderWidth; ++i)	// THAT PAINT THE TRIANGLE'S BORDER
 	{
-		// Dibujar las líneas horizontales del borde
-		DrawLineDDA(x - i, y - i, x + w + i, y - i, borderColor); // Línea superior
-		DrawLineDDA(x - i, y + h + i, x + w + i, y + h + i, borderColor); // Línea inferior
+		// WE DRAW THE HORIZONTAL LINES OF THE TRIANGLE
+		DrawLineDDA(x - i, y - i, x + w + i, y - i, borderColor); 
+		DrawLineDDA(x - i, y + h + i, x + w + i, y + h + i, borderColor);
 
-		// Dibujar las líneas verticales del borde
-		DrawLineDDA(x - i, y - i, x - i, y + h + i, borderColor); // Línea izquierda
-		DrawLineDDA(x + w + i, y - i, x + w + i, y + h + i, borderColor); // Línea derecha
+		// WE DRAW THE VERTICAL LINES OF THE TRIANGLE
+		DrawLineDDA(x - i, y - i, x - i, y + h + i, borderColor);
+		DrawLineDDA(x + w + i, y - i, x + w + i, y + h + i, borderColor); 
 	}
 
-	// Rellenar el rectángulo si es necesario
+	// WE COMPLETE THE TRIANGLE'S INTERIOR
 	if (isFilled)
 	{
 		for (int i = x; i < x + w; ++i)
@@ -357,6 +358,109 @@ void Image::DrawRect(int x, int y, int w, int h, const Color& borderColor, int b
 		}
 	}
 }
+
+// SCANLINEDDA FUNCTION
+void Image::ScanLineDDA(int x0, int y0, int x1, int y1, std::vector<Cell>& table) {
+	
+	int dx = x1 - x0;		// We calculate the director vector coordinates between p0 and p1
+	int dy = y1 - y0;
+
+	int steps = std::max(abs(dx), abs(dy));			// We calculate the steps for a diagonal line
+
+	float incrementX = (float)dx / (float)steps;			// We calculate the direction step vector to advance in every iteration
+	float incrementY = (float)dy / (float)steps;
+
+	float x = (float)x0;		// We inicialize the coordinates
+	float y = (float)y0;
+
+	for (int i = 0; i <= steps; i++) {		// Iterate each step
+		int currentY = (int)y;			// We convert Y to an enter number
+		if (currentY >= 0 && currentY < table.size()) {			// We need to verify that currentY it's inside the table limits	
+			table[currentY].minX = std::min(table[currentY].minX, (int)x);		// If that happens we update minX and maxX for each row of the table
+			table[currentY].maxX = std::max(table[currentY].maxX, (int)x);
+		}
+		x += incrementX;
+		y += incrementY;
+	}
+}
+
+// DRAWTRIANGLE FUNCTION
+void Image::DrawTriangle(const Vector2& p0, const Vector2& p1, const Vector2& p2, const Color& borderColor, bool isFilled, const Color& fillColor) {
+	std::vector<Cell> table(height);	// We create a table with the number of rows as the image height
+
+	int x0 = (int)(p0.x);
+	int y0 = (int)(p0.y);
+	int x1 = (int)(p1.x);
+	int y1 = (int)(p1.y);
+	int x2 = (int)(p2.x);
+	int y2 = (int)(p2.y);
+
+	ScanLineDDA(x0, y0, x1, y1, table);		// We rasterize the triangle borders and update the table
+	ScanLineDDA(x1, y1, x2, y2, table);
+	ScanLineDDA(x2, y2, x0, y0, table);
+
+	SetPixel(x0, y0, borderColor);		// That drwas the triangle's border
+	SetPixel(x1, y1, borderColor);
+	SetPixel(x2, y2, borderColor);
+
+	if (isFilled) {			// If we want to fill the triangle...
+		for (unsigned int y = 0; y < height; y++) {			// We iterate between the floor 0 and the triangle's height
+			if (table[y].minX <= table[y].maxX) {		// If the minX value is less than the maxX value...	
+				for (int x = table[y].minX; x <= table[y].maxX; x++) {		// We iterate between minX and maxX values for each row
+					SetPixel(x, y, fillColor);		// We set the pixel color of the pixel vallues between minX and maxX
+				}
+			}
+		}
+	}
+}
+
+
+void ParticleSystem::Init() {
+	this->framebuffer = framebuffer;
+	for (int i = 0; i < MAX_PARTICLES; i++) {
+		particles[i].position = { (float)(rand() % framebuffer->width), (float)(rand() % framebuffer->height) };
+		particles[i].velocity = { (float)(rand() % 200 - 100) / 100.0f, (float)(rand() % 200 - 100) / 100.0f };
+		particles[i].color = Color((float)(rand() % 256), (float)(rand() % 256), (float)(rand() % 256));
+		particles[i].acceleration = 0.0f;
+		particles[i].ttl = (float)(rand() % 100) / 10.0f;
+		particles[i].inactive = false;
+	} 
+}
+
+void ParticleSystem::Render() {
+	for (int i = 0; i < MAX_PARTICLES; i++) {
+		if (!particles[i].inactive) {
+			framebuffer->SetPixel((unsigned int)(particles[i].position.x), (unsigned int)(particles[i].position.y), particles[i].color);
+		}
+	}
+}
+
+void ParticleSystem::Update(float dt) {
+	for (int i = 0; i < MAX_PARTICLES; ++i) {
+		if (!particles[i].inactive) {
+			particles[i].position.x += particles[i].velocity.x * dt;
+			particles[i].position.y += particles[i].velocity.y * dt;
+			particles[i].ttl -= dt;
+
+			
+			if (particles[i].ttl <= 0) {
+				particles[i].inactive = true;
+			}
+
+			
+			if (particles[i].position.x < 0 || particles[i].position.x >= framebuffer->width ||
+				particles[i].position.y < 0 || particles[i].position.y >= framebuffer->height) {
+				particles[i].position = { (float)(rand() % framebuffer->width), (float)(rand() % framebuffer->height) };
+				particles[i].velocity = { (float)(rand() % 200 - 100) / 100.0f, (float)(rand() % 200 - 100) / 100.0f };
+				particles[i].ttl = (float)(rand() % 100) / 10.0f;
+				particles[i].inactive = false;
+			}
+		}
+	}
+}
+
+
+
 
 #ifndef IGNORE_LAMBDAS
 

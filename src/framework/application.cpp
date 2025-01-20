@@ -3,6 +3,8 @@
 #include "shader.h"
 #include "utils.h" 
 
+ParticleSystem particleSystem;
+
 Application::Application(const char* caption, int width, int height)
 {
 	this->window = createWindow(caption, width, height);
@@ -28,6 +30,7 @@ Application::~Application()
 void Application::Init(void)
 {
 	std::cout << "Initiating app..." << std::endl;
+	//particleSystem.Init();
 }
 
 // Render one frame
@@ -35,22 +38,34 @@ void Application::Render(void)
 {
 	// ...
 	int x = 650;		// We have to define X and Y variables to start
-	int y = 400;
+	int y = 300;
 	Color color = Color::YELLOW;
 
 	framebuffer.Fill(Color::BLACK);
 	framebuffer.DrawLineDDA(x, y, x + 100 * cos(time), y + 100 * sin(time), color);
 
-	framebuffer.Fill(Color::BLACK);
 	framebuffer.DrawRect(500, 500, 200, 100, Color(255, 0, 0), borderWidth, true, Color(0, 255, 0));
+
+	framebuffer.Fill(Color::BLACK);		// We define the value to draw a triangle
+	Vector2 p0 = { 450, 200 };
+	Vector2 p1 = { 600, 375 };
+	Vector2 p2 = { 400, 450 };
+	Color borderColor = Color::RED;
+	Color fillColor = Color::WHITE;		// With that we can change the fillColor of the triangle
+	bool isFilled = true;
+
+	framebuffer.DrawTriangle(p0, p1, p2, borderColor, isFilled, fillColor);
+
+	/*framebuffer.Fill(Color::BLACK);
+	particleSystem.Render();*/
 
 	framebuffer.Render();
 }
 
 // Called after render
-void Application::Update(float seconds_elapsed)
+void Application::Update(float dt)
 {
-
+	//particleSystem.Update(dt);
 }
 
 //keyboard press event 
