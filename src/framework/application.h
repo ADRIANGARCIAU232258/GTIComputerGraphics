@@ -58,4 +58,7 @@ public:
 		SDL_GetWindowSize(window,&w,&h);
 		return Vector2(float(w), float(h));
 	}
+
+private: 
+	int borderWidth;	// WE DEFINE BORDERWIDTH TO USE IT TO INCREMENT OR DECREMENT THE RECTANGLE BORDER
 };

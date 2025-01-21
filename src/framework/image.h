@@ -10,6 +10,11 @@
 #include <iostream>
 #include "framework.h"
 
+#include <vector>		// Necessary libraries to draw triangles
+#include <algorithm>
+#include <climits>
+
+
 //remove unsafe warnings
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
@@ -19,6 +24,12 @@
 class FloatImage;
 class Entity;
 class Camera;
+
+// WE NEED TO CREATE A CELL STRUCT TO STORE THE MIN AND MAX TRIANGLES PIXELS POSITIONS
+struct Cell {
+	int minX = INT_MAX;		// Initially we compute the min and max possible values
+	int maxX = INT_MIN;
+};
 
 // A matrix of pixels
 class Image
@@ -78,7 +89,17 @@ public:
 	bool LoadTGA(const char* filename, bool flip_y = false);
 	bool SaveTGA(const char* filename);
 
-	void DrawRect(int x, int y, int w, int h, const Color& c);
+	// DRAWLINEDDA FUNCTION DECLARATION
+	void DrawLineDDA(int x0, int y0, int x1, int y1, const Color& c);
+
+	// DRAWRECTANGLE FUNCTION DECLARATION
+	void DrawRect(int x, int y, int w, int h, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor);
+
+	// SCANLINEDDA FUNCTION DECLARATION
+	void ScanLineDDA(int x0, int y0, int x1, int y1, std::vector<Cell>& table);
+
+	// DRAWTRIANGLE FUNCTION DECLARATION
+	void DrawTriangle(const Vector2& p0, const Vector2& p1, const Vector2& p2, const Color& borderColor, bool isFilled, const Color& fillColor);
 
 	// Used to easy code
 	#ifndef IGNORE_LAMBDAS
@@ -125,4 +146,28 @@ public:
 	inline void SetPixelUnsafe(unsigned int x, unsigned int y, const float& v) { pixels[y * width + x] = v; }
 
 	void Resize(unsigned int width, unsigned int height);
+};
+
+
+// PARTICLESYSTEM CLASS DEFINITION
+class ParticleSystem {
+
+	static const int MAX_PARTICLES = 100;
+
+	struct Particle {
+		Vector2 position;
+		Vector2 velocity; // Normalized speed and direction of the particle
+		Color color;
+		float acceleration;
+		float ttl; // Time left until the particle expires
+		bool inactive; // Particle is not used/expired, so it can be recreated
+	};
+
+	Particle particles[MAX_PARTICLES];
+	Image* framebuffer;
+
+public:
+	void Init();
+	void Render();
+	void Update(float dt);
 };
