@@ -338,7 +338,7 @@ void Image::DrawRect(int x, int y, int w, int h, const Color& borderColor, int b
 	for (int i = 0; i < borderWidth; ++i)	// THAT PAINT THE TRIANGLE'S BORDER
 	{
 		// WE DRAW THE HORIZONTAL LINES OF THE RECTANGLE
-		DrawLineDDA(x - i, y - i, x + w + i, y - i, borderColor); 
+		DrawLineDDA(x -	i, y - i, x + w + i, y - i, borderColor); 
 		DrawLineDDA(x - i, y + h + i, x + w + i, y + h + i, borderColor);
 
 		// WE DRAW THE VERTICAL LINES OF THE RECTANGLE
@@ -399,9 +399,12 @@ void Image::DrawTriangle(const Vector2& p0, const Vector2& p1, const Vector2& p2
 	ScanLineDDA(x1, y1, x2, y2, table);
 	ScanLineDDA(x2, y2, x0, y0, table);
 
-	SetPixel(x0, y0, borderColor);		// That drwas the triangle's border
+	SetPixel(x0, y0, borderColor);// That drwas the triangle's border
 	SetPixel(x1, y1, borderColor);
 	SetPixel(x2, y2, borderColor);
+	DrawLineDDA(x0, y0, x1, y1, borderColor);
+	DrawLineDDA(x1, y1, x2, y2, borderColor);
+	DrawLineDDA(x0, y0, x2, y2, borderColor);
 
 	if (isFilled) {			// If we want to fill the triangle...
 		for (unsigned int y = 0; y < height; y++) {			// We iterate between the floor 0 and the triangle's height
