@@ -40,7 +40,7 @@ void Application::Init(void)
 void Application::Render(void)
 {
 
-	// ...
+	/*
 	int x = 650;		// We have to define X and Y variables to start
 	int y = 300;
 	Color color = Color::YELLOW;
@@ -50,7 +50,7 @@ void Application::Render(void)
 
 	framebuffer.DrawRect(500, 500, 200, 100, Color(255, 0, 0), borderWidth, true, Color(0, 255, 0));
 	
-	/*
+	
 	framebuffer.Fill(Color::BLACK);		// We define the value to draw a triangle
 	Vector2 p0 = { 450, 200 };
 	Vector2 p1 = { 600, 375 };
@@ -67,6 +67,28 @@ void Application::Render(void)
 	/*framebuffer.Fill(Color::BLACK);*/
 
 	framebuffer.Render();
+
+	framebuffer.Fill(Color::BLACK);
+
+	if (drawLines) {
+		framebuffer.DrawLineDDA(300, 300, 400, 400, Color::WHITE);
+	}
+	else if (drawRectangles) {
+		framebuffer.DrawRect(200, 200, 100, 100, Color::RED, borderWidth, isFilled, Color::GREEN);
+	}
+	else if (drawCircles) {
+		framebuffer.DrawCircle(500, 500, 100, Color::YELLOW, borderWidth, isFilled, Color::PURPLE);
+	}
+	else if (drawTriangles) {
+		Vector2 p0 = { 450, 200 };
+		Vector2 p1 = { 600, 375 };
+		Vector2 p2 = { 400, 450 };
+
+		framebuffer.DrawTriangle(p0, p1, p2, Color::BLUE, isFilled, Color::CYAN);
+	}
+	else {
+		particleSystem.Render(&framebuffer);
+	}
 }
 
 // Called after render
@@ -90,32 +112,52 @@ void Application::OnKeyPressed( SDL_KeyboardEvent event )
 
 		case SDLK_KP_1:
 		case SDLK_1: {
-			/*int x0 = rand() % window_width;
-			int y0 = rand() % window_height;
-			int x1 = rand() % window_width;
-			int y1 = rand() % window_height;*/
-			framebuffer.DrawLineDDA(300, 300, 400, 400, Color::WHITE); 
+			drawLines = true;
+			drawRectangles = false;
+			drawCircles = false;
+			drawTriangles = false;
 			break;
 		}
 
 		case SDLK_KP_2:
 		case SDLK_2: {
-			int a = 200; 
-			int b = 200; 
-			int c = 100; 
-			int d = 50;
-
-			framebuffer.DrawRect(a, b, c, d, Color::RED, borderWidth, true, Color::GREEN);
+			drawLines = false;
+			drawRectangles = true;
+			drawCircles = false;
+			drawTriangles = false;
 			break;
 		}
 
 		case SDLK_KP_3:
 		case SDLK_3: {
-			Vector2 p0 = { 450, 200 }; 
-			Vector2 p1 = { 600, 375 }; 
-			Vector2 p2 = { 400, 450 }; 
-			
-			framebuffer.DrawTriangle(p0, p1, p2, Color::BLUE, true, Color::CYAN);
+			drawLines = false;
+			drawRectangles = false;
+			drawCircles = true;
+			drawTriangles = false;
+			break;
+		}
+
+		case SDLK_KP_4:
+		case SDLK_4: {
+			drawLines = false;
+			drawRectangles = false;
+			drawCircles = false;
+			drawTriangles = true;
+			break;
+		}
+
+		case SDLK_KP_6:
+		case SDLK_6: {
+			drawLines = false;
+			drawRectangles = false;
+			drawCircles = false;
+			drawTriangles = false;
+			particleSystem.Init();
+			break;
+		}
+
+		case SDLK_f: {
+			isFilled = !isFilled;
 			break;
 		}
 	}

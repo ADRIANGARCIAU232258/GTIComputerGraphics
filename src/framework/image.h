@@ -101,6 +101,15 @@ public:
 	// DRAWTRIANGLE FUNCTION DECLARATION
 	void DrawTriangle(const Vector2& p0, const Vector2& p1, const Vector2& p2, const Color& borderColor, bool isFilled, const Color& fillColor);
 
+	// DRAWCIRCLE FUNCTION DECLARATION
+	void DrawCircle(int x0, int y0, int r, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor);
+
+	// MIDPOINTCIRCLE FUNCTION DECLARATION
+	void MidpointCircle(int x0, int y0, int r, const Color& color);
+
+	// MIDPOINTCIRCLEFILL FUNCTION DECLARATION
+	void MidpointCircleFill(int x0, int y0, int r, const Color& color);
+
 	// Used to easy code
 	#ifndef IGNORE_LAMBDAS
 
@@ -168,6 +177,6 @@ class ParticleSystem {
 
 public:
 	void Init();
-	void Render();
+	void Render(Image* framebuffer);
 	void Update(float dt);
 };

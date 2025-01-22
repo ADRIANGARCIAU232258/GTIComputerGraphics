@@ -399,7 +399,7 @@ void Image::DrawTriangle(const Vector2& p0, const Vector2& p1, const Vector2& p2
 	ScanLineDDA(x1, y1, x2, y2, table);
 	ScanLineDDA(x2, y2, x0, y0, table);
 
-	SetPixel(x0, y0, borderColor);// That drwas the triangle's border
+	SetPixel(x0, y0, borderColor);// That draws the triangle's border
 	SetPixel(x1, y1, borderColor);
 	SetPixel(x2, y2, borderColor);
 	DrawLineDDA(x0, y0, x1, y1, borderColor);
@@ -417,9 +417,86 @@ void Image::DrawTriangle(const Vector2& p0, const Vector2& p1, const Vector2& p2
 	}
 }
 
+// DRAWCIRCLE FUNCTION
+void Image::DrawCircle(int x0, int y0, int r, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor)
+{
+	// Draw the border of the circle
+	for (int i = 0; i < borderWidth; ++i)
+	{
+		MidpointCircle(x0, y0, r + i, borderColor);
+	}
+
+	// Fill the circle if needed
+	if (isFilled)
+	{
+		for (int i = 0; i < r; ++i)
+		{
+			MidpointCircleFill(x0, y0, i, fillColor);
+		}
+	}
+}
+
+void Image::MidpointCircle(int x0, int y0, int r, const Color& color)
+{
+	int x = r; // Initialize x to the radius
+	int y = 0; // Initialize y to 0
+	int p = 1 - r; // Initial decision parameter
+
+	while (x >= y)
+	{
+		// Draw the eight symmetrical points of the circle
+		SetPixel(x0 + x, y0 + y, color);
+		SetPixel(x0 - x, y0 + y, color);
+		SetPixel(x0 + x, y0 - y, color);
+		SetPixel(x0 - x, y0 - y, color);
+		SetPixel(x0 + y, y0 + x, color);
+		SetPixel(x0 - y, y0 + x, color);
+		SetPixel(x0 + y, y0 - x, color);
+		SetPixel(x0 - y, y0 - x, color);
+
+		y++; // Increment y
+
+		if (p <= 0)
+		{
+			p = p + 2 * y + 1; // Update decision parameter if p <= 0
+		}
+		else
+		{
+			x--; // Decrement x
+			p = p + 2 * y - 2 * x + 1; // Update decision parameter if p > 0
+		}
+	}
+}
+
+void Image::MidpointCircleFill(int x0, int y0, int r, const Color& color)
+{
+	int x = r; // Initialize x to the radius
+	int y = 0; // Initialize y to 0
+	int p = 1 - r; // Initial decision parameter
+
+	while (x >= y)
+	{
+		// Draw horizontal lines to fill the circle
+		DrawLineDDA(x0 - x, y0 + y, x0 + x, y0 + y, color);
+		DrawLineDDA(x0 - x, y0 - y, x0 + x, y0 - y, color);
+		DrawLineDDA(x0 - y, y0 + x, x0 + y, y0 + x, color);
+		DrawLineDDA(x0 - y, y0 - x, x0 + y, y0 - x, color);
+
+		y++; // Increment y
+
+		if (p <= 0)
+		{
+			p = p + 2 * y + 1; // Update decision parameter if p <= 0
+		}
+		else
+		{
+			x--; // Decrement x
+			p = p + 2 * y - 2 * x + 1; // Update decision parameter if p > 0
+		}
+	}
+}
 
 void ParticleSystem::Init() {
-	this->framebuffer = framebuffer;
 	for (int i = 0; i < MAX_PARTICLES; i++) {
 		particles[i].position = { (float)(rand() % framebuffer->width), (float)(rand() % framebuffer->height) };
 		particles[i].velocity = { (float)(rand() % 200 - 100) / 100.0f, (float)(rand() % 200 - 100) / 100.0f };
@@ -427,10 +504,10 @@ void ParticleSystem::Init() {
 		particles[i].acceleration = 0.0f;
 		particles[i].ttl = (float)(rand() % 100) / 10.0f;
 		particles[i].inactive = false;
-	} 
+	}
 }
 
-void ParticleSystem::Render() {
+void ParticleSystem::Render(Image* framebuffer) {
 	for (int i = 0; i < MAX_PARTICLES; i++) {
 		if (!particles[i].inactive) {
 			framebuffer->SetPixel((unsigned int)(particles[i].position.x), (unsigned int)(particles[i].position.y), particles[i].color);
@@ -441,16 +518,17 @@ void ParticleSystem::Render() {
 void ParticleSystem::Update(float dt) {
 	for (int i = 0; i < MAX_PARTICLES; ++i) {
 		if (!particles[i].inactive) {
+			// Update the position based on velocity and time
 			particles[i].position.x += particles[i].velocity.x * dt;
 			particles[i].position.y += particles[i].velocity.y * dt;
 			particles[i].ttl -= dt;
 
-			
+			// Deactivate the particle if its time to live (ttl) is over
 			if (particles[i].ttl <= 0) {
 				particles[i].inactive = true;
 			}
 
-			
+			// Reset the particle if it goes out of bounds
 			if (particles[i].position.x < 0 || particles[i].position.x >= framebuffer->width ||
 				particles[i].position.y < 0 || particles[i].position.y >= framebuffer->height) {
 				particles[i].position = { (float)(rand() % framebuffer->width), (float)(rand() % framebuffer->height) };
@@ -461,6 +539,8 @@ void ParticleSystem::Update(float dt) {
 		}
 	}
 }
+
+
 
 
 

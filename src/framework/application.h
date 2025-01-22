@@ -12,6 +12,13 @@ class Application
 {
 public:
 
+	bool drawLines = false;
+	bool drawRectangles = false;
+	bool drawCircles = false;
+	bool drawTriangles = false;
+	bool isFilled = false;
+
+
 	// Window
 
 	SDL_Window* window = nullptr;
