@@ -6,6 +6,7 @@
 #include "shader.h"
 #include "utils.h" 
 
+
 ParticleSystem particleSystem;
 
 Application::Application(const char* caption, int width, int height)
@@ -23,7 +24,8 @@ Application::Application(const char* caption, int width, int height)
 
 	this->framebuffer.Resize(w, h);
 
-	borderWidth = 1;		// WE INITIALIZE THE BORDERWIDTH TO 1
+	borderWidth = 1;		// Inicializamos el grosor del borde a 1
+	currentMode = 0;        // Inicializamos currentMode a 0
 }
 
 Application::~Application()
@@ -33,68 +35,44 @@ Application::~Application()
 void Application::Init(void)
 {
 	std::cout << "Initiating app..." << std::endl;
-	//particleSystem.Init();
+	particleSystem.Init();		// Con esto incializamos el sistema de creación de partículas
 }
 
 // Render one frame
 void Application::Render(void)
 {
 
-	/*
-	int x = 650;		// We have to define X and Y variables to start
-	int y = 300;
-	Color color = Color::YELLOW;
-
-	framebuffer.Fill(Color::BLACK);
-	framebuffer.DrawLineDDA(x, y, x + 100 * cos(time), y + 100 * sin(time), color);
-
-	framebuffer.DrawRect(500, 500, 200, 100, Color(255, 0, 0), borderWidth, true, Color(0, 255, 0));
-	
-	
-	framebuffer.Fill(Color::BLACK);		// We define the value to draw a triangle
-	Vector2 p0 = { 450, 200 };
-	Vector2 p1 = { 600, 375 };
-	Vector2 p2 = { 400, 450 };
-	Color borderColor = Color::GREEN;
-	Color fillColor = Color::CYAN;		// With that we can change the fillColor of the triangle
-	bool isFilled = true;
-
-	framebuffer.DrawTriangle(p0, p1, p2, borderColor, isFilled, fillColor);
-	*/
-	/*framebuffer.Fill(Color::BLACK);
-	particleSystem.Render();*/
-
-	/*framebuffer.Fill(Color::BLACK);*/
-
-	framebuffer.Render();
-
 	framebuffer.Fill(Color::BLACK);
 
 	if (drawLines) {
-		framebuffer.DrawLineDDA(300, 300, 400, 400, Color::WHITE);
+		framebuffer.DrawLineDDA(300, 300, 400, 400, Color::WHITE);		// Dibujamos una línea
 	}
 	else if (drawRectangles) {
-		framebuffer.DrawRect(200, 200, 100, 100, Color::RED, borderWidth, isFilled, Color::GREEN);
+		framebuffer.DrawRect(200, 200, 100, 100, Color::RED, borderWidth, isFilled, Color::GREEN);			// Aquí un rectángulo
 	}
 	else if (drawCircles) {
-		framebuffer.DrawCircle(500, 500, 100, Color::YELLOW, borderWidth, isFilled, Color::PURPLE);
+		framebuffer.DrawCircle(500, 500, 100, Color::YELLOW, borderWidth, isFilled, Color::PURPLE);			// Un círculo
 	}
-	else if (drawTriangles) {
+	else if (drawTriangles) {				// Un triángulo
 		Vector2 p0 = { 450, 200 };
 		Vector2 p1 = { 600, 375 };
 		Vector2 p2 = { 400, 450 };
 
 		framebuffer.DrawTriangle(p0, p1, p2, Color::BLUE, isFilled, Color::CYAN);
 	}
-	else {
-		particleSystem.Render(&framebuffer);
+	else if (currentMode == 6) {
+		particleSystem.Render(&framebuffer);		// Aquí renderizamos el sistema de particulas para mostrarlas por pantalla
 	}
+
+	framebuffer.Render();		// Finalmente se va renderizando la imagen
 }
 
 // Called after render
 void Application::Update(float dt)
 {
-	//particleSystem.Update(dt);
+	if (currentMode == 6) {
+		particleSystem.Update(dt);		// Aquí actualizamos el sistema de partículas
+	}
 }
 
 //keyboard press event 
@@ -105,26 +83,28 @@ void Application::OnKeyPressed( SDL_KeyboardEvent event )
 		case SDLK_ESCAPE: exit(0); break; // ESC key, kill the app
 
 		case SDLK_PLUS:
-		case SDLK_KP_PLUS: borderWidth++; break;	// TO INCREMENT THE BORDER WIDTH
+		case SDLK_KP_PLUS: borderWidth++; break;	// Incrementamos el grosor del borde 
 
 		case SDLK_MINUS:
-		case SDLK_KP_MINUS: borderWidth = std::max(1, borderWidth - 1); break;		// TO REDUCE THE WIDTH BUT WE MAKE SURE IS HIGHER THAN 1
+		case SDLK_KP_MINUS: borderWidth = std::max(1, borderWidth - 1); break;		// Reducimos el grosor del borde asegurádonos que sea mayor que 1
 
 		case SDLK_KP_1:
-		case SDLK_1: {
+		case SDLK_1: {				// Si pulsamos la tecla 1 tanto de normal como en el KeyPad...
 			drawLines = true;
 			drawRectangles = false;
 			drawCircles = false;
 			drawTriangles = false;
+			currentMode = 1;		// Entramos en el modo 1 que dibuja líneas
 			break;
 		}
 
 		case SDLK_KP_2:
-		case SDLK_2: {
+		case SDLK_2: {				// Lo mismo con el 2 y cono los siguientes números, pero cada uno con su función
 			drawLines = false;
 			drawRectangles = true;
 			drawCircles = false;
 			drawTriangles = false;
+			currentMode = 2;
 			break;
 		}
 
@@ -134,6 +114,7 @@ void Application::OnKeyPressed( SDL_KeyboardEvent event )
 			drawRectangles = false;
 			drawCircles = true;
 			drawTriangles = false;
+			currentMode = 3;
 			break;
 		}
 
@@ -143,20 +124,21 @@ void Application::OnKeyPressed( SDL_KeyboardEvent event )
 			drawRectangles = false;
 			drawCircles = false;
 			drawTriangles = true;
+			currentMode = 4;
 			break;
 		}
 
 		case SDLK_KP_6:
-		case SDLK_6: {
+		case SDLK_6: {				// En este modo no se dibujan figuras, ya que este será el encargado de las partículas
 			drawLines = false;
 			drawRectangles = false;
 			drawCircles = false;
 			drawTriangles = false;
-			particleSystem.Init();
+			currentMode = 6;
 			break;
 		}
 
-		case SDLK_f: {
+		case SDLK_f: {				// Este cambia el estado de relleno de las figuras que haya en pantalla en ese momento
 			isFilled = !isFilled;
 			break;
 		}

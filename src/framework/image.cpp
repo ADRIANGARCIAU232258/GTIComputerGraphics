@@ -309,44 +309,117 @@ bool Image::SaveTGA(const char* filename)
 	return true;
 }
 
-// DRAWLINEDDA FUNCTION
+
+// DECLARACIÓN FUNCIÓN DRAWPIXEL PARA POSTEIORMENTE USARLO PARA LA CREACIÓN DE PARTÍCULAS
+void Image::DrawPixel(int x, int y, const Color& color) {
+	if (x >= 0 && x < width && y >= 0 && y < height) {
+		pixels[y * width + x] = color;
+	}
+}
+
+// FUNCIONES PARA INICIALIZAR, RENDERIZAR Y ACTUALIZAR LAS PARTÍCULAS POR PANTALLA
+void ParticleSystem::Init() {
+	srand(static_cast<unsigned>(time(0))); // Inicializamos la generación de números aleatorios
+	for (int i = 0; i < MAX_PARTICLES; ++i) { // Creamos un loop con todas las partículas
+		particles[i].position = { static_cast<float>(rand() % 2560), static_cast<float>(rand() % 1369) }; // Asignamos una posición aleatoria a la partícula en un margen de 2560x1369
+		particles[i].velocity = { 0.0f, static_cast<float>(-(rand() % 5 + 1) * 10) }; // Asignamos una velocidad aleatoria a la partícula
+		int colorChoice = rand() % 3; // Elegimos un color aleatorio entre tres opciones
+		if (colorChoice == 0) {
+			particles[i].color = Color(255, 255, 255); // Blanco
+		}
+		else if (colorChoice == 1) {
+			particles[i].color = Color(0, 14, 255); // Azul
+		}
+		else {
+			particles[i].color = Color(132, 0, 255); // Morado
+		}
+		particles[i].acceleration = 0.0f; // Ponemos la aceleración de la partícula a 0
+		particles[i].ttl = static_cast<float>(rand() % 100 + 50); // Asignamos un tiempo de vida aleatorio a la partícula
+		particles[i].inactive = false; // Marcamos la partícula como activa
+		particles[i].size = static_cast<float>(rand() % 3 + 1); // Asignamos un tamaño aleatorio a la partícula entre 1 y 3 (para dar variedad a la imagen)
+	}
+}
+
+void ParticleSystem::Render(Image* framebuffer) {
+	for (int i = 0; i < MAX_PARTICLES; ++i) { // Volvemos a usar el loop para todas las partículas
+		if (!particles[i].inactive) { // Si la partícula está activa...
+			for (int dx = -particles[i].size; dx <= particles[i].size; ++dx) { // Iteramos sobre el tamaño de la partícula en el eje x
+				for (int dy = -particles[i].size; dy <= particles[i].size; ++dy) { // Iteramos sobre el tamaño de la partícula en el eje y
+					framebuffer->DrawPixel(static_cast<int>(particles[i].position.x + dx), static_cast<int>(particles[i].position.y + dy), particles[i].color); // Aquí dibujamos el píxel de la partícula en el framebuffer
+				}
+			}
+		}
+	}
+}
+
+void ParticleSystem::Update(float dt) {
+	for (int i = 0; i < MAX_PARTICLES; ++i) { // De nuevo el mismo loop que las dos funciones anteriores
+		if (!particles[i].inactive) { // Si la partícula está activa...
+			particles[i].position.x += particles[i].velocity.x * dt; // Actualizamos la posición de la partícula en el eje x
+			particles[i].position.y += particles[i].velocity.y * dt; // Actualizamos la posición de la partícula en el eje y
+			particles[i].ttl -= dt; // Reducimos el tiempo de vida de la partícula
+			if (particles[i].ttl <= 0 || particles[i].position.y > 1369) { // Si el tiempo de vida de la partícula ha expirado o la partícula ha salido de la pantalla...
+				particles[i].inactive = true; // Marcamos la partícula como inactiva
+				// Reiniciamos la partícula
+				particles[i].position = { static_cast<float>(rand() % 2560), static_cast<float>(rand() % 1369) }; // Generamos una nueva posición para la partícula desde la parte superior
+				particles[i].velocity = { 0.0f, static_cast<float>(-(rand() % 5 + 1) * 10) }; // Asignamos una nueva velocidad a la partícula
+				int colorChoice = rand() % 3; // Elegimos un nuevo color aleatorio para la partícula
+				if (colorChoice == 0) {
+					particles[i].color = Color(255, 255, 255); // Blanco
+				}
+				else if (colorChoice == 1) {
+					particles[i].color = Color(0, 14, 255); // Azul
+				}
+				else {
+					particles[i].color = Color(132, 0, 255); // Morado
+				}
+				particles[i].ttl = static_cast<float>(rand() % 100 + 50); // Asignamos un nuevo tiempo de vida a la partícula
+				particles[i].inactive = false; // Marcamos la partícula como activa
+				particles[i].size = static_cast<float>(rand() % 3 + 1); // Asignamos un nuevo tamaño a la partícula entre 1 y 3
+			}
+		}
+	}
+}
+
+
+// FUNCIÓN PARA DIBUJAR LÍNEAS CON EL MÉTODO DDA
 void Image::DrawLineDDA(int x0, int y0, int x1, int y1, const Color& c) {
 
-	int dx = x1 - x0;		// We calculate the director vector coordinates between p0 and p1
+	int dx = x1 - x0;		// Calculamos las coordenadas del vector director entre p0 y p1
 	int dy = y1 - y0;
 
-	int steps = std::max(abs(dx), abs(dy));			// We calculate the steps for a diagonal line
+	int steps = std::max(abs(dx), abs(dy));			// Calculamos los pasos necesarios para crear una línea diagonal
 
-	float incrementX = (float)dx / (float)steps;			// We calculate the direction step vector to advance in every iteration
+	float incrementX = (float)dx / (float)steps;			// Calculamos la dirección para avanzar en cada iteración
 	float incrementY = (float)dy / (float)steps;
 
-	float x = (float)x0;		// We inicialize the coordinates
+	float x = (float)x0;		// Inicializamos las coordenadas
 	float y = (float)y0;
 
 	for (int i = 0; i <= steps; i++) {
-		SetPixel((unsigned int)round(x), (unsigned int)round(y), c);	// Here we draw the pixel in the actual coordenates
+		SetPixel((unsigned int)round(x), (unsigned int)round(y), c);	// Aquí dibujamos el píxel en las coordenadas actuales
 
-		x += incrementX;		// We have to increment the coordenates to paint every pixel of the line
+		x += incrementX;		// Tenemos que incrementar las coordenadas para pintar cada píxel de la línea
 		y += incrementY;
 	}
 }
 
 
-// DRAWRECT FUNTION 
+// FUNCIÖN PARA DIBUJAR RECTÁNGULOS
 void Image::DrawRect(int x, int y, int w, int h, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor)
 {
-	for (int i = 0; i < borderWidth; ++i)	// THAT PAINT THE TRIANGLE'S BORDER
+	for (int i = 0; i < borderWidth; ++i)	// Esto sirve para pintar el borde del rectángulo
 	{
-		// WE DRAW THE HORIZONTAL LINES OF THE RECTANGLE
+		// Pintamos las líneas horizontales del rectángulo
 		DrawLineDDA(x -	i, y - i, x + w + i, y - i, borderColor); 
 		DrawLineDDA(x - i, y + h + i, x + w + i, y + h + i, borderColor);
 
-		// WE DRAW THE VERTICAL LINES OF THE RECTANGLE
+		// Después pintamos las verticales
 		DrawLineDDA(x - i, y - i, x - i, y + h + i, borderColor);
 		DrawLineDDA(x + w + i, y - i, x + w + i, y + h + i, borderColor); 
 	}
 
-	// WE COMPLETE THE RECTANGLE'S INTERIOR
+	// Completamos el interior del rectángulo en caso que la booleana isFilled sea True
 	if (isFilled)
 	{
 		for (int i = x; i < x + w; ++i)
@@ -359,24 +432,24 @@ void Image::DrawRect(int x, int y, int w, int h, const Color& borderColor, int b
 	}
 }
 
-// SCANLINEDDA FUNCTION
+// FUNCIÓN PARA ESCANEAR LAS LÍNEAS DE UN TRIÁNGULO
 void Image::ScanLineDDA(int x0, int y0, int x1, int y1, std::vector<Cell>& table) {
 	
-	int dx = x1 - x0;		// We calculate the director vector coordinates between p0 and p1
+	int dx = x1 - x0;		// Calculamos las coordenadas del vector director entre p0 y p1
 	int dy = y1 - y0;
 
-	int steps = std::max(abs(dx), abs(dy));			// We calculate the steps for a diagonal line
+	int steps = std::max(abs(dx), abs(dy));			// Calculamos los pasos necesarios para crear una línea diagonal
 
-	float incrementX = (float)dx / (float)steps;			// We calculate the direction step vector to advance in every iteration
+	float incrementX = (float)dx / (float)steps;			// Calculamos la dirección para avanzar en cada iteración
 	float incrementY = (float)dy / (float)steps;
 
-	float x = (float)x0;		// We inicialize the coordinates
+	float x = (float)x0;		// Inicializamos las coordenadas
 	float y = (float)y0;
 
-	for (int i = 0; i <= steps; i++) {		// Iterate each step
-		int currentY = (int)y;			// We convert Y to an enter number
-		if (currentY >= 0 && currentY < table.size()) {			// We need to verify that currentY it's inside the table limits	
-			table[currentY].minX = std::min(table[currentY].minX, (int)x);		// If that happens we update minX and maxX for each row of the table
+	for (int i = 0; i <= steps; i++) {		// Iteramos sobre cada paso
+		int currentY = (int)y;				// Convertimos Y a un número entero
+		if (currentY >= 0 && currentY < table.size()) {			// Necesitamos comprobar si currentY se encuentra dentro de los límites de la tabla
+			table[currentY].minX = std::min(table[currentY].minX, (int)x);		// En caso de que eso pase entonces actualizamos minX y maxX para cada fila de la tabla
 			table[currentY].maxX = std::max(table[currentY].maxX, (int)x);
 		}
 		x += incrementX;
@@ -384,50 +457,48 @@ void Image::ScanLineDDA(int x0, int y0, int x1, int y1, std::vector<Cell>& table
 	}
 }
 
-// DRAWTRIANGLE FUNCTION
+// FUNCIÓN PARA DIBUJAR TRIÁNGULOS
 void Image::DrawTriangle(const Vector2& p0, const Vector2& p1, const Vector2& p2, const Color& borderColor, bool isFilled, const Color& fillColor) {
-	std::vector<Cell> table(height);	// We create a table with the number of rows as the image height
+	std::vector<Cell> table(height);	// Creamos una tabla con el mismo número de filas que la altura de la imagen
 
-	int x0 = (int)(p0.x);
+	int x0 = (int)(p0.x);				// Estas son las coordenadas x e y de los tres puntos que frman el triángulo
 	int y0 = (int)(p0.y);
 	int x1 = (int)(p1.x);
 	int y1 = (int)(p1.y);
 	int x2 = (int)(p2.x);
 	int y2 = (int)(p2.y);
 
-	ScanLineDDA(x0, y0, x1, y1, table);		// We rasterize the triangle borders and update the table
+	ScanLineDDA(x0, y0, x1, y1, table);		// Rasterizamos los bordes del triángulo y actualizamos la tabla
 	ScanLineDDA(x1, y1, x2, y2, table);
 	ScanLineDDA(x2, y2, x0, y0, table);
 
-	SetPixel(x0, y0, borderColor);// That draws the triangle's border
+	SetPixel(x0, y0, borderColor);			// Esto pinta el borde
 	SetPixel(x1, y1, borderColor);
 	SetPixel(x2, y2, borderColor);
 	DrawLineDDA(x0, y0, x1, y1, borderColor);
 	DrawLineDDA(x1, y1, x2, y2, borderColor);
 	DrawLineDDA(x0, y0, x2, y2, borderColor);
 
-	if (isFilled) {			// If we want to fill the triangle...
-		for (unsigned int y = 0; y < height; y++) {			// We iterate between the floor 0 and the triangle's height
-			if (table[y].minX <= table[y].maxX) {		// If the minX value is less than the maxX value...	
-				for (int x = table[y].minX; x <= table[y].maxX; x++) {		// We iterate between minX and maxX values for each row
-					SetPixel(x, y, fillColor);		// We set the pixel color of the pixel vallues between minX and maxX
+	if (isFilled) {			// Si queremos rellenar el triángulo...
+		for (unsigned int y = 0; y < height; y++) {			// Iteramos entre la base y la altura del triángulo
+			if (table[y].minX <= table[y].maxX) {			// Si minX es menor que maxX...	
+				for (int x = table[y].minX; x <= table[y].maxX; x++) {		// Iteramos entre minX y maxX para cada fila
+					SetPixel(x, y, fillColor);		// Le damos color al píxel entre minX y maxX
 				}
 			}
 		}
 	}
 }
 
-// DRAWCIRCLE FUNCTION
+// FUNCIÓN PARA DIBUJAR CÍRCULOS
 void Image::DrawCircle(int x0, int y0, int r, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor)
 {
-	// Draw the border of the circle
-	for (int i = 0; i < borderWidth; ++i)
+	for (int i = 0; i < borderWidth; ++i)		// Aquí dibujamos el borde del círculo
 	{
 		MidpointCircle(x0, y0, r + i, borderColor);
 	}
 
-	// Fill the circle if needed
-	if (isFilled)
+	if (isFilled)		// Si es necesario lo rellenamos
 	{
 		for (int i = 0; i < r; ++i)
 		{
@@ -436,16 +507,16 @@ void Image::DrawCircle(int x0, int y0, int r, const Color& borderColor, int bord
 	}
 }
 
+// ALGORITMO PARA DIBUJAR UN CÍRCULO
 void Image::MidpointCircle(int x0, int y0, int r, const Color& color)
 {
-	int x = r; // Initialize x to the radius
-	int y = 0; // Initialize y to 0
-	int p = 1 - r; // Initial decision parameter
+	int x = r;			// Inicializamos x para el radio
+	int y = 0;			// Ini// Inicializamos y a 0
+	int p = 1 - r;		// Parámetro de decisión inicial
 
 	while (x >= y)
 	{
-		// Draw the eight symmetrical points of the circle
-		SetPixel(x0 + x, y0 + y, color);
+		SetPixel(x0 + x, y0 + y, color);		// Dibujamos los 8 puntos simétricos del círculo
 		SetPixel(x0 - x, y0 + y, color);
 		SetPixel(x0 + x, y0 - y, color);
 		SetPixel(x0 - x, y0 - y, color);
@@ -454,95 +525,47 @@ void Image::MidpointCircle(int x0, int y0, int r, const Color& color)
 		SetPixel(x0 + y, y0 - x, color);
 		SetPixel(x0 - y, y0 - x, color);
 
-		y++; // Increment y
+		y++;		// Incrementamos y
 
 		if (p <= 0)
 		{
-			p = p + 2 * y + 1; // Update decision parameter if p <= 0
+			p = p + 2 * y + 1;		// Si p <= 0 actualizamos el parámetro de decisión
 		}
 		else
 		{
-			x--; // Decrement x
-			p = p + 2 * y - 2 * x + 1; // Update decision parameter if p > 0
+			x--;	// Reducimos x
+			p = p + 2 * y - 2 * x + 1;		// Si p > 0 actualizamos el parámetro de decisión
 		}
 	}
 }
 
+// ALGORITMO PARA RELLENAR UN CÍRCULO
 void Image::MidpointCircleFill(int x0, int y0, int r, const Color& color)
 {
-	int x = r; // Initialize x to the radius
-	int y = 0; // Initialize y to 0
-	int p = 1 - r; // Initial decision parameter
+	int x = r;			// Inicializamos x para el radio
+	int y = 0;			// Ini// Inicializamos y a 0
+	int p = 1 - r;		// Parámetro de decisión inicial
 
 	while (x >= y)
 	{
-		// Draw horizontal lines to fill the circle
-		DrawLineDDA(x0 - x, y0 + y, x0 + x, y0 + y, color);
+		DrawLineDDA(x0 - x, y0 + y, x0 + x, y0 + y, color);			// Dibujamos las líneas horizontales para rellenar el círculo
 		DrawLineDDA(x0 - x, y0 - y, x0 + x, y0 - y, color);
 		DrawLineDDA(x0 - y, y0 + x, x0 + y, y0 + x, color);
 		DrawLineDDA(x0 - y, y0 - x, x0 + y, y0 - x, color);
 
-		y++; // Increment y
+		y++;		// Incrementamos y
 
 		if (p <= 0)
 		{
-			p = p + 2 * y + 1; // Update decision parameter if p <= 0
+			p = p + 2 * y + 1;		// Si p <= 0 actualizamos el parámetro de decisión
 		}
 		else
 		{
-			x--; // Decrement x
-			p = p + 2 * y - 2 * x + 1; // Update decision parameter if p > 0
+			x--;	// Reducimos x
+			p = p + 2 * y - 2 * x + 1;		// Si p > 0 actualizamos el parámetro de decisión
 		}
 	}
 }
-
-void ParticleSystem::Init() {
-	for (int i = 0; i < MAX_PARTICLES; i++) {
-		particles[i].position = { (float)(rand() % framebuffer->width), (float)(rand() % framebuffer->height) };
-		particles[i].velocity = { (float)(rand() % 200 - 100) / 100.0f, (float)(rand() % 200 - 100) / 100.0f };
-		particles[i].color = Color((float)(rand() % 256), (float)(rand() % 256), (float)(rand() % 256));
-		particles[i].acceleration = 0.0f;
-		particles[i].ttl = (float)(rand() % 100) / 10.0f;
-		particles[i].inactive = false;
-	}
-}
-
-void ParticleSystem::Render(Image* framebuffer) {
-	for (int i = 0; i < MAX_PARTICLES; i++) {
-		if (!particles[i].inactive) {
-			framebuffer->SetPixel((unsigned int)(particles[i].position.x), (unsigned int)(particles[i].position.y), particles[i].color);
-		}
-	}
-}
-
-void ParticleSystem::Update(float dt) {
-	for (int i = 0; i < MAX_PARTICLES; ++i) {
-		if (!particles[i].inactive) {
-			// Update the position based on velocity and time
-			particles[i].position.x += particles[i].velocity.x * dt;
-			particles[i].position.y += particles[i].velocity.y * dt;
-			particles[i].ttl -= dt;
-
-			// Deactivate the particle if its time to live (ttl) is over
-			if (particles[i].ttl <= 0) {
-				particles[i].inactive = true;
-			}
-
-			// Reset the particle if it goes out of bounds
-			if (particles[i].position.x < 0 || particles[i].position.x >= framebuffer->width ||
-				particles[i].position.y < 0 || particles[i].position.y >= framebuffer->height) {
-				particles[i].position = { (float)(rand() % framebuffer->width), (float)(rand() % framebuffer->height) };
-				particles[i].velocity = { (float)(rand() % 200 - 100) / 100.0f, (float)(rand() % 200 - 100) / 100.0f };
-				particles[i].ttl = (float)(rand() % 100) / 10.0f;
-				particles[i].inactive = false;
-			}
-		}
-	}
-}
-
-
-
-
 
 
 #ifndef IGNORE_LAMBDAS

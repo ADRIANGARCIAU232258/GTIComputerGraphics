@@ -12,7 +12,7 @@ class Application
 {
 public:
 
-	bool drawLines = false;
+	bool drawLines = false;			// Varriables para guardar el estado de la creación de primitivas
 	bool drawRectangles = false;
 	bool drawCircles = false;
 	bool drawTriangles = false;
@@ -67,5 +67,6 @@ public:
 	}
 
 private: 
-	int borderWidth;	// WE DEFINE BORDERWIDTH TO USE IT TO INCREMENT OR DECREMENT THE RECTANGLE BORDER
+	int borderWidth;	// Definimos una variable para incrementar o reducir el grosor del borde del rectángulo
+	int currentMode = 0;		//Definimos currentMode para utilizarlo en la detección de teclas
 };

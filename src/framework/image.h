@@ -10,7 +10,7 @@
 #include <iostream>
 #include "framework.h"
 
-#include <vector>		// Necessary libraries to draw triangles
+#include <vector>		// LIBRERÍAS NECESARIAS PARA LOS TRIÁNGULOS
 #include <algorithm>
 #include <climits>
 
@@ -89,26 +89,37 @@ public:
 	bool LoadTGA(const char* filename, bool flip_y = false);
 	bool SaveTGA(const char* filename);
 
-	// DRAWLINEDDA FUNCTION DECLARATION
+
+	// CON ESTO PODEMOS SABER CUAL ES EL TAMAÑO DE LA PANTALLA
+	int GetWidth() const { return width; }
+	int GetHeight() const { return height; }
+
+
+	// DECLARACIÓN FUNCIÓN DRAWPIXEL PARA POSTEIORMENTE USARLO PARA LA CREACIÓN DE PARTÍCULAS
+	void DrawPixel(int x, int y, const Color& color);
+
+	// FUNCIÓN PARA DIBUJAR LÍNEAS CON EL MÉTODO DDA
 	void DrawLineDDA(int x0, int y0, int x1, int y1, const Color& c);
 
-	// DRAWRECTANGLE FUNCTION DECLARATION
+	// FUNCIÖN PARA DIBUJAR RECTÁNGULOS
 	void DrawRect(int x, int y, int w, int h, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor);
 
-	// SCANLINEDDA FUNCTION DECLARATION
+	// FUNCIÓN PARA ESCANEAR LAS LÍNEAS DE UN TRIÁNGULO
 	void ScanLineDDA(int x0, int y0, int x1, int y1, std::vector<Cell>& table);
 
-	// DRAWTRIANGLE FUNCTION DECLARATION
+	// FUNCIÓN PARA DIBUJAR TRIÁNGULOS
 	void DrawTriangle(const Vector2& p0, const Vector2& p1, const Vector2& p2, const Color& borderColor, bool isFilled, const Color& fillColor);
 
-	// DRAWCIRCLE FUNCTION DECLARATION
+	// FUNCIÓN PARA DIBUJAR CÍRCULOS
 	void DrawCircle(int x0, int y0, int r, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor);
 
-	// MIDPOINTCIRCLE FUNCTION DECLARATION
+	// ALGORITMO PARA DIBUJAR UN CÍRCULO
 	void MidpointCircle(int x0, int y0, int r, const Color& color);
 
-	// MIDPOINTCIRCLEFILL FUNCTION DECLARATION
+	// ALGORITMO PARA RELLENAR UN CÍRCULO
 	void MidpointCircleFill(int x0, int y0, int r, const Color& color);
+
+
 
 	// Used to easy code
 	#ifndef IGNORE_LAMBDAS
@@ -158,10 +169,9 @@ public:
 };
 
 
-// PARTICLESYSTEM CLASS DEFINITION
+// DEFINICIÓN DE LA FUNCIÓN PARA CREAR PARTÍCULAS
 class ParticleSystem {
-
-	static const int MAX_PARTICLES = 100;
+	static const int MAX_PARTICLES = 3000;
 
 	struct Particle {
 		Vector2 position;
@@ -170,13 +180,14 @@ class ParticleSystem {
 		float acceleration;
 		float ttl; // Time left until the particle expires
 		bool inactive; // Particle is not used/expired, so it can be recreated
+		float size; // Tamaño de la partícula
 	};
 
 	Particle particles[MAX_PARTICLES];
-	Image* framebuffer;
 
 public:
 	void Init();
 	void Render(Image* framebuffer);
 	void Update(float dt);
 };
+
