@@ -358,7 +358,7 @@ void ParticleSystem::Update(float dt) {
 			particles[i].position.x += particles[i].velocity.x * dt; // Actualizamos la posición de la partícula en el eje x
 			particles[i].position.y += particles[i].velocity.y * dt; // Actualizamos la posición de la partícula en el eje y
 			particles[i].ttl -= dt; // Reducimos el tiempo de vida de la partícula
-			if (particles[i].ttl <= 0 || particles[i].position.y > 1369) { // Si el tiempo de vida de la partícula ha expirado o la partícula ha salido de la pantalla...
+			if (particles[i].ttl <= 0 || particles[i].position.y < 0) { // Si el tiempo de vida de la partícula ha expirado o la partícula ha salido de la pantalla...
 				particles[i].inactive = true; // Marcamos la partícula como inactiva
 				// Reiniciamos la partícula
 				particles[i].position = { static_cast<float>(rand() % 2560), static_cast<float>(rand() % 1369) }; // Generamos una nueva posición para la partícula desde la parte superior

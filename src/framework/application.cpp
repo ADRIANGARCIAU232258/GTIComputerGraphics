@@ -41,9 +41,8 @@ void Application::Init(void)
 // Render one frame
 void Application::Render(void)
 {
-
 	framebuffer.Fill(Color::BLACK);
-
+	
 	if (drawLines) {
 		framebuffer.DrawLineDDA(300, 300, 400, 400, Color::WHITE);		// Dibujamos una línea
 	}
