@@ -2,12 +2,20 @@
 #include <ctime>
 #include <random>
 #include "application.h"
+#include "entity.h"
 #include "mesh.h"
 #include "shader.h"
 #include "utils.h" 
 
 
-ParticleSystem particleSystem;
+// Creamos un vector de entidades global con varias entidades
+std::vector<Entity*> entities;
+
+// Variables para controlare la cámara
+float camera_near = 0.01f;
+float camera_far = 100.0f;
+float camera_fov = 45.0f; 
+int current_property = 0; // 0: nada, 1: near, 2: far, 3: fov
 
 Application::Application(const char* caption, int width, int height)
 {
@@ -30,48 +38,82 @@ Application::Application(const char* caption, int width, int height)
 
 Application::~Application()
 {
+	// Liberamos memoria de cada una de las entidades
+    for (Entity* entity : entities) {
+        delete entity;
+    }
+    entities.clear();
 }
 
 void Application::Init(void)
 {
 	std::cout << "Initiating app..." << std::endl;
-	particleSystem.Init();		// Con esto incializamos el sistema de creación de partículas
+
+	// Creamos unas cuantas entidades y las añadimos al vector de entidades
+	Mesh* mesh1 = new Mesh();
+	mesh1->LoadOBJ("../res/meshes/cleo.obj");
+	Entity* entity1 = new Entity(mesh1, Matrix44());
+
+	Mesh* mesh2 = new Mesh();
+	mesh2->LoadOBJ("../res/meshes/cleo.obj");
+	Entity* entity2 = new Entity(mesh2, Matrix44());
+
+	Mesh* mesh3 = new Mesh();
+	mesh3->LoadOBJ("../res/meshes/lee.obj");
+	Entity* entity3 = new Entity(mesh3, Matrix44());
+
+	entities.push_back(entity1);
+	entities.push_back(entity2);
+	entities.push_back(entity3);
 }
 
 // Render one frame
 void Application::Render(void)
 {
 	framebuffer.Fill(Color::BLACK);
-	
-	if (drawLines) {
-		framebuffer.DrawLineDDA(300, 300, 400, 400, Color::WHITE);		// Dibujamos una línea
-	}
-	else if (drawRectangles) {
-		framebuffer.DrawRect(200, 200, 100, 100, Color::RED, borderWidth, isFilled, Color::GREEN);			// Aquí un rectángulo
-	}
-	else if (drawCircles) {
-		framebuffer.DrawCircle(500, 500, 100, Color::YELLOW, borderWidth, isFilled, Color::PURPLE);			// Un círculo
-	}
-	else if (drawTriangles) {				// Un triángulo
-		Vector2 p0 = { 450, 200 };
-		Vector2 p1 = { 600, 375 };
-		Vector2 p2 = { 400, 450 };
 
-		framebuffer.DrawTriangle(p0, p1, p2, Color::BLUE, isFilled, Color::CYAN);
+	// Renderizar las entidades según el modo actual
+	if (currentMode == 1) {
+		// Dibuja una sola entidad
+		if (!entities.empty()) {
+			entities[0]->Render(&framebuffer, &camera, Color::WHITE);
+		}
+		else {
+			std::cout << "No hay entidades para renderizar" << std::endl;
+		}
 	}
-	else if (currentMode == 6) {
-		particleSystem.Render(&framebuffer);		// Aquí renderizamos el sistema de particulas para mostrarlas por pantalla
+	else if (currentMode == 2) {
+		// Dibuja múltiples entidades animadas
+		for (Entity* entity : entities) {
+			entity->Render(&framebuffer, &camera, Color::WHITE);
+		}
 	}
 
-	framebuffer.Render();		// Finalmente se va renderizando la imagen
+	framebuffer.Render(); // Finalmente se va renderizando la imagen
 }
 
 // Called after render
 void Application::Update(float dt)
 {
-	if (currentMode == 6) {
-		particleSystem.Update(dt);		// Aquí actualizamos el sistema de partículas
+	// Controlamos las propiedades de la cámara
+	if (current_property == 1) {
+		camera_near += 0.1f * dt;
 	}
+	else if (current_property == 2) {
+		camera_far += 0.1f * dt;
+	}
+	else if (current_property == 3) {
+		camera_fov += 0.1f * dt;
+	}
+	else if (currentMode == 2) {
+		for (Entity* entity : entities) {
+			entity->Update(dt);        // Actualizamos las entidades
+		}
+	}
+
+	// Actualizar las matrices de la cámara
+	camera.UpdateProjectionMatrix();
+	camera.UpdateViewMatrix();
 }
 
 //keyboard press event 
@@ -81,66 +123,37 @@ void Application::OnKeyPressed( SDL_KeyboardEvent event )
 	switch (event.keysym.sym) {
 		case SDLK_ESCAPE: exit(0); break; // ESC key, kill the app
 
-		case SDLK_PLUS:
-		case SDLK_KP_PLUS: borderWidth++; break;	// Incrementamos el grosor del borde 
-
-		case SDLK_MINUS:
-		case SDLK_KP_MINUS: borderWidth = std::max(1, borderWidth - 1); break;		// Reducimos el grosor del borde asegurádonos que sea mayor que 1
-
+		case SDLK_1:
 		case SDLK_KP_1:
-		case SDLK_1: {				// Si pulsamos la tecla 1 tanto de normal como en el KeyPad...
-			drawLines = true;
-			drawRectangles = false;
-			drawCircles = false;
-			drawTriangles = false;
-			currentMode = 1;		// Entramos en el modo 1 que dibuja líneas
+			currentMode = 1; // Dibujamos una sola entidad
 			break;
-		}
-
+		case SDLK_2:
 		case SDLK_KP_2:
-		case SDLK_2: {				// Lo mismo con el 2 y cono los siguientes números, pero cada uno con su función
-			drawLines = false;
-			drawRectangles = true;
-			drawCircles = false;
-			drawTriangles = false;
-			currentMode = 2;
+			currentMode = 2; // Dibujamos varias entidades animadas
 			break;
-		}
-
-		case SDLK_KP_3:
-		case SDLK_3: {
-			drawLines = false;
-			drawRectangles = false;
-			drawCircles = true;
-			drawTriangles = false;
-			currentMode = 3;
+		case SDLK_n:
+			current_property = 1; // Configuramos propiedad actual a near
 			break;
-		}
-
-		case SDLK_KP_4:
-		case SDLK_4: {
-			drawLines = false;
-			drawRectangles = false;
-			drawCircles = false;
-			drawTriangles = true;
-			currentMode = 4;
+		case SDLK_f:
+			current_property = 2; // Configuramos propiedad actual a far
 			break;
-		}
-
-		case SDLK_KP_6:
-		case SDLK_6: {				// En este modo no se dibujan figuras, ya que este será el encargado de las partículas
-			drawLines = false;
-			drawRectangles = false;
-			drawCircles = false;
-			drawTriangles = false;
-			currentMode = 6;
+		case SDLK_v:
+			current_property = 3; // Configuramos propiedad actual a fov
 			break;
-		}
-
-		case SDLK_f: {				// Este cambia el estado de relleno de las figuras que haya en pantalla en ese momento
-			isFilled = !isFilled;
+		case SDLK_PLUS:
+		case SDLK_KP_PLUS:
+			// Incrementamos la propiedad actual
+			if (current_property == 1) camera_near += 0.1f;
+			else if (current_property == 2) camera_far += 0.1f;
+			else if (current_property == 3) camera_fov += 1.0f;
 			break;
-		}
+		case SDLK_MINUS:
+		case SDLK_KP_MINUS:
+			// Disminuimos la propiedad actual
+			if (current_property == 1) camera_near -= 0.1f;
+			else if (current_property == 2) camera_far -= 0.1f;
+			else if (current_property == 3) camera_fov -= 1.0f;
+			break;
 	}
 }
 

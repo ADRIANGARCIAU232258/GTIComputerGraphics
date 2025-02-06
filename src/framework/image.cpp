@@ -322,7 +322,7 @@ void ParticleSystem::Init() {
 	srand(static_cast<unsigned>(time(0))); // Inicializamos la generación de números aleatorios
 	for (int i = 0; i < MAX_PARTICLES; ++i) { // Creamos un loop con todas las partículas
 		particles[i].position = { static_cast<float>(rand() % 2560), static_cast<float>(rand() % 1369) }; // Asignamos una posición aleatoria a la partícula en un margen de 2560x1369
-		particles[i].velocity = { 0.0f, static_cast<float>(-(rand() % 5 + 1) * 10) }; // Asignamos una velocidad aleatoria a la partícula
+		particles[i].velocity = { 0.0f, static_cast<float>(-(rand() % 5 + 1) * 200) }; // Asignamos una velocidad aleatoria a la partícula
 		int colorChoice = rand() % 3; // Elegimos un color aleatorio entre tres opciones
 		if (colorChoice == 0) {
 			particles[i].color = Color(255, 255, 255); // Blanco
@@ -362,7 +362,7 @@ void ParticleSystem::Update(float dt) {
 				particles[i].inactive = true; // Marcamos la partícula como inactiva
 				// Reiniciamos la partícula
 				particles[i].position = { static_cast<float>(rand() % 2560), static_cast<float>(rand() % 1369) }; // Generamos una nueva posición para la partícula desde la parte superior
-				particles[i].velocity = { 0.0f, static_cast<float>(-(rand() % 5 + 1) * 10) }; // Asignamos una nueva velocidad a la partícula
+				particles[i].velocity = { 0.0f, static_cast<float>(-(rand() % 5 + 1) * 200) }; // Asignamos una nueva velocidad a la partícula
 				int colorChoice = rand() % 3; // Elegimos un nuevo color aleatorio para la partícula
 				if (colorChoice == 0) {
 					particles[i].color = Color(255, 255, 255); // Blanco

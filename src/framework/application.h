@@ -7,6 +7,7 @@
 #include "main/includes.h"
 #include "framework.h"
 #include "image.h"
+#include "camera.h"
 
 class Application
 {
@@ -17,6 +18,11 @@ public:
 	bool drawCircles = false;
 	bool drawTriangles = false;
 	bool isFilled = false;
+
+	std::vector<Entity*> entities; // Definimos vector para almacenar las entidades
+
+	// Declaramos la cámara
+	Camera camera;
 
 
 	// Window

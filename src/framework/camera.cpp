@@ -1,7 +1,9 @@
+
 #include "camera.h"
 
 #include "main/includes.h"
 #include <iostream>
+#include <cmath> // Librería para funciones trigonométricas
 
 Camera::Camera()
 {
@@ -86,40 +88,55 @@ void Camera::UpdateViewMatrix()
 	// Reset Matrix (Identity)
 	view_matrix.SetIdentity();
 
-	// Comment this line to create your own projection matrix!
-	SetExampleViewMatrix();
+	// Eliminar o comentar el ejemplo
+	// SetExampleViewMatrix();
 
-	// Remember how to fill a Matrix4x4 (check framework slides)
-	// Careful with the order of matrix multiplications, and be sure to use normalized vectors!
-	
-	// Create the view matrix rotation
-	// ...
-	// view_matrix.M[3][3] = 1.0;
+	// Crear la matriz de vista usando vectores normalizados
+	Vector3 zaxis = (eye - center).Normalize();    // Eje Z de la cámara
+	Vector3 xaxis = (up.Cross(zaxis)).Normalize(); // Eje X de la cámara
+	Vector3 yaxis = zaxis.Cross(xaxis);            // Eje Y de la cámara
 
-	// Translate view matrix
-	// ...
+	view_matrix.M[0][0] = xaxis.x; view_matrix.M[0][1] = yaxis.x; view_matrix.M[0][2] = zaxis.x; view_matrix.M[0][3] = 0;
+	view_matrix.M[1][0] = xaxis.y; view_matrix.M[1][1] = yaxis.y; view_matrix.M[1][2] = zaxis.y; view_matrix.M[1][3] = 0;
+	view_matrix.M[2][0] = xaxis.z; view_matrix.M[2][1] = yaxis.z; view_matrix.M[2][2] = zaxis.z; view_matrix.M[2][3] = 0;
+
+	view_matrix.M[3][0] = -xaxis.Dot(eye);
+	view_matrix.M[3][1] = -yaxis.Dot(eye);
+	view_matrix.M[3][2] = -zaxis.Dot(eye);
+	view_matrix.M[3][3] = 1;
+
+	// Aplicar traslación local
+	view_matrix.TranslateLocal(-eye.x, -eye.y, -eye.z);
 
 	UpdateViewProjectionMatrix();
 }
 
-// Create a projection matrix
 void Camera::UpdateProjectionMatrix()
 {
 	// Reset Matrix (Identity)
 	projection_matrix.SetIdentity();
 
-	// Comment this line to create your own projection matrix!
-	SetExampleProjectionMatrix();
+	// Eliminar o comentar el ejemplo
+	// SetExampleProjectionMatrix();
 
-	// Remember how to fill a Matrix4x4 (check framework slides)
-	
 	if (type == PERSPECTIVE) {
-		// projection_matrix.M[2][3] = -1;
-		// ...
+		float tanHalfFOV = std::tan(fov / 2.0f);
+		projection_matrix.M[0][0] = 1.0f / (aspect * tanHalfFOV);
+		projection_matrix.M[1][1] = 1.0f / tanHalfFOV;
+		projection_matrix.M[2][2] = -(far_plane + near_plane) / (far_plane - near_plane);
+		projection_matrix.M[2][3] = -1.0f;
+		projection_matrix.M[3][2] = -(2.0f * far_plane * near_plane) / (far_plane - near_plane);
+		projection_matrix.M[3][3] = 0.0f;
 	}
 	else if (type == ORTHOGRAPHIC) {
-		// ...
-	} 
+		projection_matrix.M[0][0] = 2.0f / (right - left);
+		projection_matrix.M[1][1] = 2.0f / (top - bottom);
+		projection_matrix.M[2][2] = -2.0f / (far_plane - near_plane);
+		projection_matrix.M[3][0] = -(right + left) / (right - left);
+		projection_matrix.M[3][1] = -(top + bottom) / (top - bottom);
+		projection_matrix.M[3][2] = -(far_plane + near_plane) / (far_plane - near_plane);
+		projection_matrix.M[3][3] = 1.0f;
+	}
 
 	UpdateViewProjectionMatrix();
 }
