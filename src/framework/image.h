@@ -119,6 +119,9 @@ public:
 	// ALGORITMO PARA RELLENAR UN CÍRCULO
 	void MidpointCircleFill(int x0, int y0, int r, const Color& color);
 
+	// FUNCIÓN PARA DIBUJAR TRIÁNGULOS INTERPOLADOS
+	void DrawTriangleInterpolated(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Color& c0, const Color& c1, const Color& c2);
+
 
 
 	// Used to easy code

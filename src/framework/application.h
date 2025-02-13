@@ -21,6 +21,8 @@ public:
 
 	std::vector<Entity*> entities; // Definimos vector para almacenar las entidades
 
+	bool toggleInterpolation = false;
+
 	// Declaramos la cámara
 	Camera camera;
 	Vector3 camera_target;

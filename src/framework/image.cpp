@@ -567,6 +567,47 @@ void Image::MidpointCircleFill(int x0, int y0, int r, const Color& color)
 	}
 }
 
+void Image::DrawTriangleInterpolated(const Vector3& p0, const Vector3& p1, const Vector3& p2,
+	const Color& c0, const Color& c1, const Color& c2) {
+	std::vector<Cell> table(height); // Creamos la tabla AET para el escaneo del triángulo
+
+	// Convertimos las coordenadas a enteros
+	int x0 = (int)(p0.x), y0 = (int)(p0.y);
+	int x1 = (int)(p1.x), y1 = (int)(p1.y);
+	int x2 = (int)(p2.x), y2 = (int)(p2.y);
+
+	// Escaneamos los bordes del triángulo
+	ScanLineDDA(x0, y0, x1, y1, table);
+	ScanLineDDA(x1, y1, x2, y2, table);
+	ScanLineDDA(x2, y2, x0, y0, table);
+
+	// Determinamos el área del triángulo (doble área en coordenadas enteras)
+	float area = (x1 - x0) * (y2 - y0) - (y1 - y0) * (x2 - x0);
+	if (area == 0) return; // Evitar divisiones por cero
+
+	// Iteramos sobre cada fila del triángulo
+	for (int y = 0; y < height; y++) {
+		if (table[y].minX <= table[y].maxX) {
+			for (int x = table[y].minX; x <= table[y].maxX; x++) {
+				// Calculamos las coordenadas baricéntricas
+				float w0 = ((x1 - x) * (y2 - y) - (y1 - y) * (x2 - x)) / area;
+				float w1 = ((x2 - x) * (y0 - y) - (y2 - y) * (x0 - x)) / area;
+				float w2 = 1.0f - w0 - w1;
+
+				// Validamos que las coordenadas baricéntricas sean válidas
+				if (w0 < 0 || w1 < 0 || w2 < 0) continue;
+
+				// Interpolamos el color final usando las coordenadas baricéntricas
+				Color interpolatedColor = c0 * w0 + c1 * w1 + c2 * w2;
+
+				// Dibujamos el píxel con el color interpolado
+				SetPixel(x, y, interpolatedColor);
+			}
+		}
+	}
+}
+
+
 
 #ifndef IGNORE_LAMBDAS
 

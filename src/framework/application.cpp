@@ -178,7 +178,7 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
 		case SDLK_c:
 			for (Entity* entity : entities) {	// Como entities es un vector de punteros, iteramos correctamente
 				if (entity) {					// Verificamos que el puntero no sea nulo antes de acceder
-					entity->ToggleTriangleFill();
+					entity->InterpolationMode();
 				}
 			}
 			break;
