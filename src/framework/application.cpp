@@ -175,6 +175,13 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
 			current_property = 3; // Configuramos la propiedad actual a fov
 			std::cout << "Propiedad actual: FOV" << std::endl;
 			break;
+		case SDLK_c:
+			for (Entity* entity : entities) {	// Como entities es un vector de punteros, iteramos correctamente
+				if (entity) {					// Verificamos que el puntero no sea nulo antes de acceder
+					entity->ToggleTriangleFill();
+				}
+			}
+			break;
 		case SDLK_PLUS:
 		case SDLK_KP_PLUS:
 			// Incrementamos la propiedad actual

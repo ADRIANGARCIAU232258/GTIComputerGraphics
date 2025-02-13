@@ -66,10 +66,16 @@ void Entity::Render(Image* framebuffer, Camera* camera, const Color& c) {
         v2.x = (v2.x * 0.5 + 0.5) * framebuffer->width;
         v2.y = (v2.y * 0.5 + 0.5) * framebuffer->height;
 
-        // Dibujamos líneas entre los vértices proyectados para formar un triángulo
-        framebuffer->DrawLineDDA(v0.x, v0.y, v1.x, v1.y, c);
-        framebuffer->DrawLineDDA(v1.x, v1.y, v2.x, v2.y, c);
-        framebuffer->DrawLineDDA(v2.x, v2.y, v0.x, v0.y, c);
+        if (isFilled) {
+            // Dibujamos líneas entre los vértices proyectados para formar un triángulo
+            framebuffer->DrawLineDDA(v0.x, v0.y, v1.x, v1.y, c);
+            framebuffer->DrawLineDDA(v1.x, v1.y, v2.x, v2.y, c);
+            framebuffer->DrawLineDDA(v2.x, v2.y, v0.x, v0.y, c);
+        }
+        else {
+            // Dibujamos cada uno de los triángulos rellenos por color
+            framebuffer->DrawTriangle(Vector2(v0.x, v0.y), Vector2(v1.x, v1.y), Vector2(v2.x, v2.y), c, true, c);
+        }
     }
 }
 

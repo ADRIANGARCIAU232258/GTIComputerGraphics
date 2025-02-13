@@ -8,6 +8,12 @@ public:
     Mesh* mesh;
     Matrix44 modelMatrix;
 
+    // Creamos una variable booleana que dirá si se debe rellenar o no los triángulos
+    bool isFilled = false;
+
+    // Función para hacer el cambio entre Interpalated UVs y Filled Triangles
+    void ToggleTriangleFill() { isFilled = !isFilled; };
+
     // Definimos los dos posibles tipos de constructores
     Entity();
     Entity(Mesh* mesh, Matrix44 modelMatrix);
