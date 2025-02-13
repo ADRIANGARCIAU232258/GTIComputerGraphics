@@ -3,19 +3,23 @@
 #include "camera.h"
 #include "image.h"
 
+// Añadimos la enumeración eRenderMode
+enum class eRenderMode {
+    POINTCLOUD,   
+    WIREFRAME,        
+    TRIANGLES,        
+    TRIANGLES_INTERPOLATED 
+};
+
 class Entity {
 public:
     Mesh* mesh;
     Matrix44 modelMatrix;
 
-    // Creamos una variable booleana que dirá si se debe interpolar o no los triángulos
-    bool toggleInterpolation = false;
+    // Agregamos miembro con el modo de renderizado actual
+    eRenderMode mode = eRenderMode::TRIANGLES; // Establecemos el valor por defecto en TRIANGLES
 
-    // Función para hacer el cambio entre Interpalated UVs y Filled Triangles
-    void InterpolationMode() { 
-        toggleInterpolation = !toggleInterpolation;
-        std::cout << "Modo de interpolación cambiado: " << (toggleInterpolation ? "Interpolado" : "Sólido") << std::endl;
-    };
+    void SetRenderMode(eRenderMode newMode);  // Método para cambiar el modo de renderizado
 
     // Definimos los dos posibles tipos de constructores
     Entity();

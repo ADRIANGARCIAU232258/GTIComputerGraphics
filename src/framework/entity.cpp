@@ -9,6 +9,11 @@ Entity::Entity() : mesh(nullptr), modelMatrix(Matrix44()) {}
 // Aquí inicializanos el constructor de la clase Entity con parámetros de malla y matriz de modelo
 Entity::Entity(Mesh* mesh, Matrix44 modelMatrix) : mesh(mesh), modelMatrix(modelMatrix) {}
 
+// Método para cambiar el modo de renderizado
+void Entity::SetRenderMode(eRenderMode newMode) {
+    mode = newMode;
+}
+
 // Establecemos la malla de la entidad
 void Entity::setMesh(Mesh* newMesh) {
     mesh = newMesh;
@@ -66,12 +71,28 @@ void Entity::Render(Image* framebuffer, Camera* camera, const Color& c) {
         v2.x = (v2.x * 0.5 + 0.5) * framebuffer->width;
         v2.y = (v2.y * 0.5 + 0.5) * framebuffer->height;
 
-        if (toggleInterpolation == false) {
-            // Dibujamos cada uno de los triángulos rellenos por color
+        
+        switch (mode) {
+        case eRenderMode::POINTCLOUD:
+            // Dibujar puntos (no implementado aquí)
+            break;
+
+        case eRenderMode::WIREFRAME:
+            // Usamos DrawLineDDA para dibujar las líneas de los triángulos
+            framebuffer->DrawLineDDA((int)v0.x, (int)v0.y, (int)v1.x, (int)v1.y, c);
+            framebuffer->DrawLineDDA((int)v1.x, (int)v1.y, (int)v2.x, (int)v2.y, c);
+            framebuffer->DrawLineDDA((int)v2.x, (int)v2.y, (int)v0.x, (int)v0.y, c);
+            break;
+
+        case eRenderMode::TRIANGLES:
+            // Rellenamos triángulos con color
             framebuffer->DrawTriangle(Vector2(v0.x, v0.y), Vector2(v1.x, v1.y), Vector2(v2.x, v2.y), c, true, c);
-        }
-        else {
-            framebuffer->DrawTriangleInterpolated(v0, v1, v2, Color(1, 0, 0), Color(0, 1, 0), Color(0, 0, 1));
+            break;
+
+        case eRenderMode::TRIANGLES_INTERPOLATED:
+            // Rellenamos triángulos con interpolación de colores
+            framebuffer->DrawTriangleInterpolated(v0, v1, v2, Color(255, 0, 0), Color(0, 255, 0), Color(0, 0, 255));
+            break;
         }
     }
 }

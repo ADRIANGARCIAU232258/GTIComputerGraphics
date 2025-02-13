@@ -567,45 +567,40 @@ void Image::MidpointCircleFill(int x0, int y0, int r, const Color& color)
 	}
 }
 
-void Image::DrawTriangleInterpolated(const Vector3& p0, const Vector3& p1, const Vector3& p2,
-	const Color& c0, const Color& c1, const Color& c2) {
-	std::vector<Cell> table(height); // Creamos la tabla AET para el escaneo del triángulo
+void Image::DrawTriangleInterpolated(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Color& c0, const Color& c1, const Color& c2) {
+	// Calcular el área del triángulo completo
+	float area = (p1.x - p0.x) * (p2.y - p0.y) - (p2.x - p0.x) * (p1.y - p0.y);
 
-	// Convertimos las coordenadas a enteros
-	int x0 = (int)(p0.x), y0 = (int)(p0.y);
-	int x1 = (int)(p1.x), y1 = (int)(p1.y);
-	int x2 = (int)(p2.x), y2 = (int)(p2.y);
+	// Iterar sobre todos los píxeles dentro del triángulo
+	for (int y = std::min(p0.y, std::min(p1.y, p2.y)); y <= std::max(p0.y, std::max(p1.y, p2.y)); y++) {
+		for (int x = std::min(p0.x, std::min(p1.x, p2.x)); x <= std::max(p0.x, std::max(p1.x, p2.x)); x++) {
 
-	// Escaneamos los bordes del triángulo
-	ScanLineDDA(x0, y0, x1, y1, table);
-	ScanLineDDA(x1, y1, x2, y2, table);
-	ScanLineDDA(x2, y2, x0, y0, table);
+			// Calcular las áreas de los subtriángulos
+			float area0 = (p1.x - x) * (p2.y - y) - (p2.x - x) * (p1.y - y);
+			float area1 = (p2.x - x) * (p0.y - y) - (p0.x - x) * (p2.y - y);
+			float area2 = (p0.x - x) * (p1.y - y) - (p1.x - x) * (p0.y - y);
 
-	// Determinamos el área del triángulo (doble área en coordenadas enteras)
-	float area = (x1 - x0) * (y2 - y0) - (y1 - y0) * (x2 - x0);
-	if (area == 0) return; // Evitar divisiones por cero
+			// Normalizar las áreas para obtener las coordenadas baricéntricas
+			float u = area0 / area;
+			float v = area1 / area;
+			float w = area2 / area;
 
-	// Iteramos sobre cada fila del triángulo
-	for (int y = 0; y < height; y++) {
-		if (table[y].minX <= table[y].maxX) {
-			for (int x = table[y].minX; x <= table[y].maxX; x++) {
-				// Calculamos las coordenadas baricéntricas
-				float w0 = ((x1 - x) * (y2 - y) - (y1 - y) * (x2 - x)) / area;
-				float w1 = ((x2 - x) * (y0 - y) - (y2 - y) * (x0 - x)) / area;
-				float w2 = 1.0f - w0 - w1;
+			// Si el píxel está dentro del triángulo (todas las áreas deben ser >= 0)
+			if (u >= 0 && v >= 0 && w >= 0) {
+				// Interpolar el color utilizando las coordenadas baricéntricas
+				Color finalColor = c0 * u + c1 * v + c2 * w;
 
-				// Validamos que las coordenadas baricéntricas sean válidas
-				if (w0 < 0 || w1 < 0 || w2 < 0) continue;
-
-				// Interpolamos el color final usando las coordenadas baricéntricas
-				Color interpolatedColor = c0 * w0 + c1 * w1 + c2 * w2;
-
-				// Dibujamos el píxel con el color interpolado
-				SetPixel(x, y, interpolatedColor);
+				// Dibujar el píxel con el color interpolado
+				SetPixel(x, y, finalColor); // Asume que hay una función SetPixel(x, y, color)
 			}
 		}
 	}
 }
+
+
+
+
+
 
 
 

@@ -1,4 +1,4 @@
-#include <cstdlib>
+Ôªø#include <cstdlib>
 #include <ctime>
 #include <random>
 #include "application.h"
@@ -11,7 +11,7 @@
 // Creamos un vector de entidades global con varias entidades
 std::vector<Entity*> entities;
 
-// Variables para controlare la c·mara
+// Variables para controlare la c√°mara
 float camera_near = 0.01f;
 float camera_far = 100.0f;
 float camera_fov = 45.0f; 
@@ -35,10 +35,10 @@ Application::Application(const char* caption, int width, int height)
 	borderWidth = 1;		// Inicializamos el grosor del borde a 1
 	currentMode = 0;        // Inicializamos currentMode a 0
 
-	// Configuramos la c·mara inicialmente
+	// Configuramos la c√°mara inicialmente
 	camera.SetPerspective(camera_fov * DEG2RAD, (float)window_width / window_height, camera_near, camera_far);
 	camera_target = Vector3(0, 0, 0);
-	camera_distance = 5.0f; // Distancia inicial de la c·mara
+	camera_distance = 5.0f; // Distancia inicial de la c√°mara
 	camera.LookAt(Vector3(0, 0, camera_distance), camera_target, Vector3(0, 1, 0));
 }
 
@@ -55,7 +55,7 @@ void Application::Init(void)
 {
 	std::cout << "Initiating app..." << std::endl;
 
-	// Creamos unas cuantas entidades y las aÒadimos al vector de entidades
+	// Creamos unas cuantas entidades y las a√±adimos al vector de entidades
 	Mesh* mesh1 = new Mesh();
 	mesh1->LoadOBJ("../res/meshes/cleo.obj");
 	Entity* entity1 = new Entity(mesh1, Matrix44());
@@ -76,6 +76,7 @@ void Application::Init(void)
 	entities[0]->modelMatrix.SetTranslation(-2, 0, 0);
 	entities[1]->modelMatrix.SetTranslation(0, 0, 0);
 	entities[2]->modelMatrix.SetTranslation(2, 0, 0);
+
 }
 
 // Render one frame
@@ -84,9 +85,9 @@ void Application::Render(void)
 	framebuffer.Fill(Color::BLACK);
 
 	// Lista de colores para cada una de las entidades
-	Color colors[] = { Color::WHITE, Color::YELLOW, Color::BLUE };
+	Color colors[] = { Color::GREEN, Color::WHITE, Color::BLUE };
 
-	// Renderizamos las entidades seg˙n el modo actual
+	// Renderizamos las entidades seg√∫n el modo actual
 	if (currentMode == 1) {
 		// Dibujamos una sola entidad
 		if (!entities.empty()) {
@@ -94,7 +95,7 @@ void Application::Render(void)
 		}
 	}
 	else if (currentMode == 2) {
-		// Dibujamos m˙ltiples entidades con animaciÁon
+		// Dibujamos m√∫ltiples entidades con animaci√ßon
 		for (size_t i = 0; i < entities.size(); ++i) {
 			entities[i]->Render(&framebuffer, &camera, colors[i]);
 		}
@@ -106,10 +107,10 @@ void Application::Render(void)
 // Called after render
 void Application::Update(float dt)
 {
-	// Controlamos las propiedades de la c·mara
+	// Controlamos las propiedades de la c√°mara
 	if (current_property == 1) {
 		camera_near += 1.0f * dt;
-		if (camera_near >= camera_far) {		// Para evitar n˙meros fuera del rango, establecemos ciertas limitaciones
+		if (camera_near >= camera_far) {		// Para evitar n√∫meros fuera del rango, establecemos ciertas limitaciones
 			camera_near = camera_far - 0.1f;
 		}
 	}
@@ -130,17 +131,36 @@ void Application::Update(float dt)
 	}
 	
 	if (currentMode == 2) {
-		// Asignamos animaciones distintas a cada entidad
-		float angles[] = { 90.0f, 45.0f, 60.0f };
-		for (size_t i = 0; i < entities.size(); ++i) {
-			float angle = angles[i] * dt; // Para animarlas de manera distintas, asignaremos un angulo de rotaciÛn diferente para cada una de las entidades
-			Matrix44 rotationMatrix;
-			rotationMatrix.SetRotation(angle * DEG2RAD, Vector3(0, 1, 0));	// La rotaciÛn ser· respecto el eje Y
-			entities[i]->modelMatrix = rotationMatrix * entities[i]->modelMatrix; // Aplicamos la rotaciÛn al modelo
-		}
+		// Rotamos entidad 0 sobre su propio eje Y
+		float angle = 90.0f * dt; // Seteamos velocidad de rotaci√≥n
+		Matrix44 rotationMatrix;
+		rotationMatrix.SetRotation(angle * DEG2RAD, Vector3(0, 1, 0)); // Rotamos sobre el eje Y
+
+		// Aplicamos solo la rotaci√≥n sin modificar la traslaci√∂n
+		entities[0]->modelMatrix = entities[0]->modelMatrix * rotationMatrix;
+
+		// Movemos verticalmente entidad 1 en el eje Y
+		Matrix44 translationMatrix;
+		translationMatrix.SetTranslation(0, sin(4 * time) / 20, 0);
+		entities[1]->modelMatrix = translationMatrix * entities[1]->modelMatrix;
+
+		// Modificamos tama√±o de entidad 2
+		float scaleFactor = 1.0f + 0.01f * sin(time); // Cambio de escala (factor de tama√±o)
+
+		// Aplicamos la escala directamente a la matriz de la entidad
+		Matrix44 scaleMatrix;
+		scaleMatrix._11 = scaleFactor; // Escala en X
+		scaleMatrix._22 = scaleFactor; // Escala en Y
+		scaleMatrix._33 = scaleFactor; // Escala en Z
+		scaleMatrix._44 = 1.0f;        
+
+		// Aplicamos la escala a la entidad sin que esta se mueva
+		entities[2]->modelMatrix = scaleMatrix * entities[2]->modelMatrix;
+
+
 	}
 
-	// Actualizamos las matrices de la c·mara
+	// Actualizamos las matrices de la c√°mara
 	camera.SetPerspective(camera_fov * DEG2RAD, (float)window_width / window_height, camera_near, camera_far);
 	camera.UpdateProjectionMatrix();
 	camera.LookAt(Vector3(0, 0, camera_distance), camera_target, Vector3(0, 1, 0));
@@ -161,7 +181,7 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
 		case SDLK_2:
 		case SDLK_KP_2:
 			currentMode = 2; // Dibujamos varias entidades animadas
-			std::cout << "Modo actual: Dibuja m˙ltiples entidades animadas" << std::endl;
+			std::cout << "Modo actual: Dibuja m√∫ltiples entidades animadas" << std::endl;
 			break;
 		case SDLK_n:
 			current_property = 1; // Configuramos la propiedad actual a near
@@ -176,11 +196,19 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
 			std::cout << "Propiedad actual: FOV" << std::endl;
 			break;
 		case SDLK_c:
-			for (Entity* entity : entities) {	// Como entities es un vector de punteros, iteramos correctamente
-				if (entity) {					// Verificamos que el puntero no sea nulo antes de acceder
-					entity->InterpolationMode();
+			// Alternamos entre TRIANGLES y TRIANGLES_INTERPOLATED usando el enum
+			for (Entity* entity : entities) {
+				if (entity) {
+					// Cambiamos el modo entre TRIANGLES y TRIANGLES_INTERPOLATED
+					if (entity->mode == eRenderMode::TRIANGLES) {
+						entity->SetRenderMode(eRenderMode::TRIANGLES_INTERPOLATED);
+					}
+					else {
+						entity->SetRenderMode(eRenderMode::TRIANGLES);
+					}
 				}
 			}
+			std::cout << "Modo de triangulaci√≥n cambiado!" << std::endl;
 			break;
 		case SDLK_PLUS:
 		case SDLK_KP_PLUS:
@@ -234,7 +262,7 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
 			break;
 	}
 
-	// Actualizamos las matrices de la c·mara
+	// Actualizamos las matrices de la c√°mara
 	camera.SetPerspective(camera_fov * DEG2RAD, (float)window_width / window_height, camera_near, camera_far);
 	camera.UpdateProjectionMatrix();
 	camera.UpdateViewMatrix();
