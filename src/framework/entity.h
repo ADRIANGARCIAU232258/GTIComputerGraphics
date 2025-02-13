@@ -16,10 +16,10 @@ public:
     void setMesh(Mesh* newMesh);
     void setModelMatrix(Matrix44 newModelMatrix);
 
-    // Método render para rasterizar las mallas de la entidad
+    // Método render que utilizaremos para rasterizar las mallas de la entidad
     void Entity::Render(Image* framebuffer, Camera* camera, const Color& c);
 
-    // Método para actualizar matrices modelo y adí poder rotarlas, etc...
+    // Método usado para actualizar matrices modelo y adí poder rotarlas, etc...
     void Update(float seconds_elapsed);
 };
 

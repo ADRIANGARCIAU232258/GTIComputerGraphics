@@ -15,7 +15,7 @@ std::vector<Entity*> entities;
 float camera_near = 0.01f;
 float camera_far = 100.0f;
 float camera_fov = 45.0f; 
-int current_property = 0; // 0: nada, 1: near, 2: far, 3: fov
+int current_property = 0; // Usaremos 0 para nada, 1 para near, 2 para far y 3 para FOV
 
 Application::Application(const char* caption, int width, int height)
 {
@@ -34,6 +34,12 @@ Application::Application(const char* caption, int width, int height)
 
 	borderWidth = 1;		// Inicializamos el grosor del borde a 1
 	currentMode = 0;        // Inicializamos currentMode a 0
+
+	// Configuramos la cámara inicialmente
+	camera.SetPerspective(camera_fov * DEG2RAD, (float)window_width / window_height, camera_near, camera_far);
+	camera_target = Vector3(0, 0, 0);
+	camera_distance = 5.0f; // Distancia inicial de la cámara
+	camera.LookAt(Vector3(0, 0, camera_distance), camera_target, Vector3(0, 1, 0));
 }
 
 Application::~Application()
@@ -65,6 +71,11 @@ void Application::Init(void)
 	entities.push_back(entity1);
 	entities.push_back(entity2);
 	entities.push_back(entity3);
+
+	// Establecemos las posiciones iniciales de las entidades para evitar que se solapen
+	entities[0]->modelMatrix.SetTranslation(-2, 0, 0);
+	entities[1]->modelMatrix.SetTranslation(0, 0, 0);
+	entities[2]->modelMatrix.SetTranslation(2, 0, 0);
 }
 
 // Render one frame
@@ -72,20 +83,20 @@ void Application::Render(void)
 {
 	framebuffer.Fill(Color::BLACK);
 
-	// Renderizar las entidades según el modo actual
+	// Lista de colores para cada una de las entidades
+	Color colors[] = { Color::WHITE, Color::YELLOW, Color::BLUE };
+
+	// Renderizamos las entidades según el modo actual
 	if (currentMode == 1) {
-		// Dibuja una sola entidad
+		// Dibujamos una sola entidad
 		if (!entities.empty()) {
-			entities[0]->Render(&framebuffer, &camera, Color::WHITE);
-		}
-		else {
-			std::cout << "No hay entidades para renderizar" << std::endl;
+			entities[0]->Render(&framebuffer, &camera, colors[0]);
 		}
 	}
 	else if (currentMode == 2) {
-		// Dibuja múltiples entidades animadas
-		for (Entity* entity : entities) {
-			entity->Render(&framebuffer, &camera, Color::WHITE);
+		// Dibujamos múltiples entidades con animaciçon
+		for (size_t i = 0; i < entities.size(); ++i) {
+			entities[i]->Render(&framebuffer, &camera, colors[i]);
 		}
 	}
 
@@ -97,65 +108,131 @@ void Application::Update(float dt)
 {
 	// Controlamos las propiedades de la cámara
 	if (current_property == 1) {
-		camera_near += 0.1f * dt;
+		camera_near += 1.0f * dt;
+		if (camera_near >= camera_far) {		// Para evitar números fuera del rango, establecemos ciertas limitaciones
+			camera_near = camera_far - 0.1f;
+		}
 	}
 	else if (current_property == 2) {
-		camera_far += 0.1f * dt;
+		camera_far += 1.0f * dt;
+		if (camera_far <= camera_near) {
+			camera_far = camera_near + 0.1f;
+		}
 	}
 	else if (current_property == 3) {
 		camera_fov += 0.1f * dt;
+		if (camera_fov < 1.0f) {
+			camera_fov = 1.0f;
+		}
+		else if (camera_fov > 179.0f) {
+			camera_fov = 179.0f;
+		}
 	}
-	else if (currentMode == 2) {
-		for (Entity* entity : entities) {
-			entity->Update(dt);        // Actualizamos las entidades
+	
+	if (currentMode == 2) {
+		// Asignamos animaciones distintas a cada entidad
+		float angles[] = { 90.0f, 45.0f, 60.0f };
+		for (size_t i = 0; i < entities.size(); ++i) {
+			float angle = angles[i] * dt; // Para animarlas de manera distintas, asignaremos un angulo de rotación diferente para cada una de las entidades
+			Matrix44 rotationMatrix;
+			rotationMatrix.SetRotation(angle * DEG2RAD, Vector3(0, 1, 0));	// La rotación será respecto el eje Y
+			entities[i]->modelMatrix = rotationMatrix * entities[i]->modelMatrix; // Aplicamos la rotación al modelo
 		}
 	}
 
-	// Actualizar las matrices de la cámara
+	// Actualizamos las matrices de la cámara
+	camera.SetPerspective(camera_fov * DEG2RAD, (float)window_width / window_height, camera_near, camera_far);
 	camera.UpdateProjectionMatrix();
+	camera.LookAt(Vector3(0, 0, camera_distance), camera_target, Vector3(0, 1, 0));
 	camera.UpdateViewMatrix();
 }
 
 //keyboard press event 
-void Application::OnKeyPressed( SDL_KeyboardEvent event )
+void Application::OnKeyPressed(SDL_KeyboardEvent event)
 {
-	// KEY CODES: https://wiki.libsdl.org/SDL2/SDL_Keycode
 	switch (event.keysym.sym) {
 		case SDLK_ESCAPE: exit(0); break; // ESC key, kill the app
 
 		case SDLK_1:
 		case SDLK_KP_1:
 			currentMode = 1; // Dibujamos una sola entidad
+			std::cout << "Modo actual: Dibuja una sola entidad" << std::endl;
 			break;
 		case SDLK_2:
 		case SDLK_KP_2:
 			currentMode = 2; // Dibujamos varias entidades animadas
+			std::cout << "Modo actual: Dibuja múltiples entidades animadas" << std::endl;
 			break;
 		case SDLK_n:
-			current_property = 1; // Configuramos propiedad actual a near
+			current_property = 1; // Configuramos la propiedad actual a near
+			std::cout << "Propiedad actual: Near" << std::endl;
 			break;
 		case SDLK_f:
-			current_property = 2; // Configuramos propiedad actual a far
+			current_property = 2; // Configuramos la propiedad actual a far
+			std::cout << "Propiedad actual: Far" << std::endl;
 			break;
 		case SDLK_v:
-			current_property = 3; // Configuramos propiedad actual a fov
+			current_property = 3; // Configuramos la propiedad actual a fov
+			std::cout << "Propiedad actual: FOV" << std::endl;
 			break;
 		case SDLK_PLUS:
 		case SDLK_KP_PLUS:
 			// Incrementamos la propiedad actual
-			if (current_property == 1) camera_near += 0.1f;
-			else if (current_property == 2) camera_far += 0.1f;
-			else if (current_property == 3) camera_fov += 1.0f;
+			if (current_property == 1) {
+				camera_near += 1.0f;
+				if (camera_near >= camera_far) {
+					camera_near = camera_far - 0.1f;
+				}
+			}
+			else if (current_property == 2) {
+				camera_far += 1.0f;
+				if (camera_far <= camera_near) {
+					camera_far = camera_near + 0.1f;
+				}
+			}
+			else if (current_property == 3) {
+				camera_fov += 1.0f;
+				if (camera_fov < 1.0f) {
+					camera_fov = 1.0f;
+				}
+				else if (camera_fov > 179.0f) {
+					camera_fov = 179.0f;
+				}
+			}
 			break;
 		case SDLK_MINUS:
 		case SDLK_KP_MINUS:
 			// Disminuimos la propiedad actual
-			if (current_property == 1) camera_near -= 0.1f;
-			else if (current_property == 2) camera_far -= 0.1f;
-			else if (current_property == 3) camera_fov -= 1.0f;
+			if (current_property == 1) {
+				camera_near -= 1.0f;
+				if (camera_near < 0.1f) {
+					camera_near = 0.1f;
+				}
+			}
+			else if (current_property == 2) {
+				camera_far -= 1.0f;
+				if (camera_far < 0.1f) {
+					camera_far = 0.1f;
+				}
+			}
+			else if (current_property == 3) {
+				camera_fov -= 1.0f;
+				if (camera_fov < 1.0f) {
+					camera_fov = 1.0f;
+				}
+				else if (camera_fov > 179.0f) {
+					camera_fov = 179.0f;
+				}
+			}
 			break;
 	}
+
+	// Actualizamos las matrices de la cámara
+	camera.SetPerspective(camera_fov * DEG2RAD, (float)window_width / window_height, camera_near, camera_far);
+	camera.UpdateProjectionMatrix();
+	camera.UpdateViewMatrix();
 }
+
 
 void Application::OnMouseButtonDown( SDL_MouseButtonEvent event )
 {

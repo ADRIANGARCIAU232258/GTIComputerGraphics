@@ -23,6 +23,11 @@ public:
 
 	// Declaramos la cámara
 	Camera camera;
+	Vector3 camera_target;
+	float camera_distance;
+
+	bool rightMouseButtonDown = false;
+	bool leftMouseButtonDown = false;
 
 
 	// Window

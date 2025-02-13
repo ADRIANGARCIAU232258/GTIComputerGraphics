@@ -85,42 +85,41 @@ void Camera::LookAt(const Vector3& eye, const Vector3& center, const Vector3& up
 
 void Camera::UpdateViewMatrix()
 {
-	// Reset Matrix (Identity)
+	// Reseteamos la matriz a identidad
 	view_matrix.SetIdentity();
 
-	// Eliminar o comentar el ejemplo
-	// SetExampleViewMatrix();
-
-	// Crear la matriz de vista usando vectores normalizados
+	// A continuación creamos la matriz de vista usando vectores normalizados
 	Vector3 zaxis = (eye - center).Normalize();    // Eje Z de la cámara
-	Vector3 xaxis = (up.Cross(zaxis)).Normalize(); // Eje X de la cámara
-	Vector3 yaxis = zaxis.Cross(xaxis);            // Eje Y de la cámara
+	Vector3 xaxis = (up.Cross(zaxis)).Normalize(); // Eje X
+	Vector3 yaxis = zaxis.Cross(xaxis);            // Eje Y
 
+	// Asignamos los valores calculados a la matriz de vista
 	view_matrix.M[0][0] = xaxis.x; view_matrix.M[0][1] = yaxis.x; view_matrix.M[0][2] = zaxis.x; view_matrix.M[0][3] = 0;
 	view_matrix.M[1][0] = xaxis.y; view_matrix.M[1][1] = yaxis.y; view_matrix.M[1][2] = zaxis.y; view_matrix.M[1][3] = 0;
 	view_matrix.M[2][0] = xaxis.z; view_matrix.M[2][1] = yaxis.z; view_matrix.M[2][2] = zaxis.z; view_matrix.M[2][3] = 0;
 
+	// Aplicamos la traslación local a la matriz de vista
 	view_matrix.M[3][0] = -xaxis.Dot(eye);
 	view_matrix.M[3][1] = -yaxis.Dot(eye);
 	view_matrix.M[3][2] = -zaxis.Dot(eye);
 	view_matrix.M[3][3] = 1;
 
-	// Aplicar traslación local
+	// Aplicamos la traslación local usando las coordenadas de la cámara
 	view_matrix.TranslateLocal(-eye.x, -eye.y, -eye.z);
 
+	// Actualizamos la matriz de vista proyección
 	UpdateViewProjectionMatrix();
 }
 
 void Camera::UpdateProjectionMatrix()
 {
-	// Reset Matrix (Identity)
+	// Reseteamos la matriz a identidad
 	projection_matrix.SetIdentity();
 
-	// Eliminar o comentar el ejemplo
-	// SetExampleProjectionMatrix();
-
 	if (type == PERSPECTIVE) {
+		// Calculamos el valor de la tangente del ángulo FOV dividido en 2
 		float tanHalfFOV = std::tan(fov / 2.0f);
+		// Asignamos los valores a la matriz de proyección para perspectiva
 		projection_matrix.M[0][0] = 1.0f / (aspect * tanHalfFOV);
 		projection_matrix.M[1][1] = 1.0f / tanHalfFOV;
 		projection_matrix.M[2][2] = -(far_plane + near_plane) / (far_plane - near_plane);
@@ -129,6 +128,7 @@ void Camera::UpdateProjectionMatrix()
 		projection_matrix.M[3][3] = 0.0f;
 	}
 	else if (type == ORTHOGRAPHIC) {
+		// Asignamos los valores a la matriz de proyección para ortográfica
 		projection_matrix.M[0][0] = 2.0f / (right - left);
 		projection_matrix.M[1][1] = 2.0f / (top - bottom);
 		projection_matrix.M[2][2] = -2.0f / (far_plane - near_plane);
@@ -138,8 +138,10 @@ void Camera::UpdateProjectionMatrix()
 		projection_matrix.M[3][3] = 1.0f;
 	}
 
+	// Actualizamos la matriz de vista proyección
 	UpdateViewProjectionMatrix();
 }
+
 
 void Camera::UpdateViewProjectionMatrix()
 {
