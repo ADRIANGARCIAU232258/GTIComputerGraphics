@@ -76,7 +76,6 @@ void Application::Init(void)
 	entities[0]->modelMatrix.SetTranslation(-2, 0, 0);
 	entities[1]->modelMatrix.SetTranslation(0, 0, 0);
 	entities[2]->modelMatrix.SetTranslation(2, 0, 0);
-
 }
 
 // Render one frame
