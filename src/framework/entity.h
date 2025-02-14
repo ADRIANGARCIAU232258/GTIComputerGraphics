@@ -30,7 +30,7 @@ public:
     void setModelMatrix(Matrix44 newModelMatrix);
 
     // Método render que utilizaremos para rasterizar las mallas de la entidad
-    void Entity::Render(Image* framebuffer, Camera* camera, const Color& c);
+    void Entity::Render(Image* framebuffer, Camera* camera, FloatImage* zBuffer);   
 
     // Método usado para actualizar matrices modelo y adí poder rotarlas, etc...
     void Update(float seconds_elapsed);

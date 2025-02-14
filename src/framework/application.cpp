@@ -85,19 +85,20 @@ void Application::Render(void)
 	framebuffer.Fill(Color::BLACK);
 
 	// Lista de colores para cada una de las entidades
+	FloatImage zBuffer(framebuffer.width, framebuffer.height);
 	Color colors[] = { Color::GREEN, Color::WHITE, Color::BLUE };
 
 	// Renderizamos las entidades según el modo actual
 	if (currentMode == 1) {
 		// Dibujamos una sola entidad
 		if (!entities.empty()) {
-			entities[1]->Render(&framebuffer, &camera, colors[0]);
+			entities[1]->Render(&framebuffer, &camera, &zBuffer);
 		}
 	}
 	else if (currentMode == 2) {
 		// Dibujamos múltiples entidades con animaciçon
 		for (size_t i = 0; i < entities.size(); ++i) {
-			entities[i]->Render(&framebuffer, &camera, colors[i]);
+			entities[i]->Render(&framebuffer, &camera, &zBuffer);
 		}
 	}
 
@@ -145,14 +146,16 @@ void Application::Update(float dt)
 		entities[0]->modelMatrix = translationMatrix * entities[0]->modelMatrix;
 
 		// Modificamos tamaño de entidad 1
-		float scaleFactor = 1.0f + 0.01f * sin(time); // Cambio de escala (factor de tamaño)
+		float scaleFactor = 1.0f + 0.03f * sin(time); // Cambio de escala (factor de tamaño)
 
 		// Aplicamos la escala directamente a la matriz de la entidad
 		Matrix44 scaleMatrix;
-		scaleMatrix._11 = scaleFactor; // Escala en X
-		scaleMatrix._22 = scaleFactor; // Escala en Y
-		scaleMatrix._33 = scaleFactor; // Escala en Z
-		scaleMatrix._44 = 1.0f;        
+		scaleMatrix.Set(
+			scaleFactor, 0, 0, 0,
+			0, scaleFactor, 0, 0,
+			0, 0, scaleFactor, 0,
+			0, 0, 0, 1.0f
+		); //Para escalar la matriz por sus respectivos ejes
 
 		// Aplicamos la escala a la entidad sin que esta se mueva
 		entities[1]->modelMatrix = scaleMatrix * entities[1]->modelMatrix;
@@ -200,9 +203,11 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
 					// Cambiamos el modo entre TRIANGLES y TRIANGLES_INTERPOLATED
 					if (entity->mode == eRenderMode::TRIANGLES) {
 						entity->SetRenderMode(eRenderMode::TRIANGLES_INTERPOLATED);
+						
 					}
 					else {
 						entity->SetRenderMode(eRenderMode::TRIANGLES);
+						
 					}
 				}
 			}

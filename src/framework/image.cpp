@@ -458,32 +458,32 @@ void Image::ScanLineDDA(int x0, int y0, int x1, int y1, std::vector<Cell>& table
 }
 
 // FUNCIÓN PARA DIBUJAR TRIÁNGULOS
-void Image::DrawTriangle(const Vector2& p0, const Vector2& p1, const Vector2& p2, const Color& borderColor, bool isFilled, const Color& fillColor) {
-	std::vector<Cell> table(height);	// Creamos una tabla con el mismo número de filas que la altura de la imagen
+void Image::DrawTriangle(const sTriangleInfo& triangle, bool isFilled) {
+	std::vector<Cell> table(height); // Creamos una tabla con el mismo número de filas que la altura de la imagen
 
-	int x0 = (int)(p0.x);				// Estas son las coordenadas x e y de los tres puntos que frman el triángulo
-	int y0 = (int)(p0.y);
-	int x1 = (int)(p1.x);
-	int y1 = (int)(p1.y);
-	int x2 = (int)(p2.x);
-	int y2 = (int)(p2.y);
+	int x0 = (int)(triangle.vertices[0].x); // Estas son las coordenadas x e y de los tres puntos que forman el triángulo
+	int y0 = (int)(triangle.vertices[0].y);
+	int x1 = (int)(triangle.vertices[1].x);
+	int y1 = (int)(triangle.vertices[1].y);
+	int x2 = (int)(triangle.vertices[2].x);
+	int y2 = (int)(triangle.vertices[2].y);
 
-	ScanLineDDA(x0, y0, x1, y1, table);		// Rasterizamos los bordes del triángulo y actualizamos la tabla
+	ScanLineDDA(x0, y0, x1, y1, table); // Rasterizamos los bordes del triángulo y actualizamos la tabla
 	ScanLineDDA(x1, y1, x2, y2, table);
 	ScanLineDDA(x2, y2, x0, y0, table);
 
-	SetPixel(x0, y0, borderColor);			// Esto pinta el borde
-	SetPixel(x1, y1, borderColor);
-	SetPixel(x2, y2, borderColor);
-	DrawLineDDA(x0, y0, x1, y1, borderColor);
-	DrawLineDDA(x1, y1, x2, y2, borderColor);
-	DrawLineDDA(x0, y0, x2, y2, borderColor);
+	SetPixel(x0, y0, triangle.colors[0]); // Esto pinta el borde
+	SetPixel(x1, y1, triangle.colors[1]);
+	SetPixel(x2, y2, triangle.colors[2]);
+	DrawLineDDA(x0, y0, x1, y1, triangle.colors[0]);
+	DrawLineDDA(x1, y1, x2, y2, triangle.colors[1]);
+	DrawLineDDA(x0, y0, x2, y2, triangle.colors[2]);
 
-	if (isFilled) {			// Si queremos rellenar el triángulo...
-		for (unsigned int y = 0; y < height; y++) {			// Iteramos entre la base y la altura del triángulo
-			if (table[y].minX <= table[y].maxX) {			// Si minX es menor que maxX...	
-				for (int x = table[y].minX; x <= table[y].maxX; x++) {		// Iteramos entre minX y maxX para cada fila
-					SetPixel(x, y, fillColor);		// Le damos color al píxel entre minX y maxX
+	if (isFilled) { // Si queremos rellenar el triángulo...
+		for (unsigned int y = 0; y < height; y++) { // Iteramos entre la base y la altura del triángulo
+			if (table[y].minX <= table[y].maxX) { // Si minX es menor que maxX...
+				for (int x = table[y].minX; x <= table[y].maxX; x++) { // Iteramos entre minX y maxX para cada fila
+					SetPixel(x, y, triangle.colors[0]); // Le damos color al píxel entre minX y maxX
 				}
 			}
 		}
@@ -567,7 +567,18 @@ void Image::MidpointCircleFill(int x0, int y0, int r, const Color& color)
 	}
 }
 
-void Image::DrawTriangleInterpolated(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Color& c0, const Color& c1, const Color& c2) {
+void Image::DrawTriangleInterpolated(const sTriangleInfo& triangle, FloatImage* zbuffer) {
+	const Vector3& p0 = triangle.vertices[0];
+	const Vector3& p1 = triangle.vertices[1];
+	const Vector3& p2 = triangle.vertices[2];
+	const Color& c0 = triangle.colors[0];
+	const Color& c1 = triangle.colors[1];
+	const Color& c2 = triangle.colors[2];
+	const Vector2& uv0 = triangle.uvs[0];
+	const Vector2& uv1 = triangle.uvs[1];
+	const Vector2& uv2 = triangle.uvs[2];
+	Image* texture = triangle.texture;
+
 	// Calcular el área del triángulo completo
 	float area = (p1.x - p0.x) * (p2.y - p0.y) - (p2.x - p0.x) * (p1.y - p0.y);
 
@@ -587,11 +598,20 @@ void Image::DrawTriangleInterpolated(const Vector3& p0, const Vector3& p1, const
 
 			// Si el píxel está dentro del triángulo (todas las áreas deben ser >= 0)
 			if (u >= 0 && v >= 0 && w >= 0) {
-				// Interpolar el color utilizando las coordenadas baricéntricas
-				Color finalColor = c0 * u + c1 * v + c2 * w;
+				if (texture) {
+					float tex_u = uv0.x * u + uv1.x * v + uv2.x * w;
+					float tex_v = uv0.y * u + uv1.y * v + uv2.y * w;
+					Color texColor = texture->GetPixel(tex_u * texture->width, tex_v * texture->height);
 
-				// Dibujar el píxel con el color interpolado
-				SetPixel(x, y, finalColor); // Asume que hay una función SetPixel(x, y, color)
+					SetPixel(x, y, texColor);
+				}
+				else {
+					// Interpolar el color utilizando las coordenadas baricéntricas
+					Color finalColor = c0 * u + c1 * v + c2 * w;
+
+					// Dibujar el píxel con el color interpolado
+					SetPixel(x, y, finalColor); // Asume que hay una función SetPixel(x, y, color)
+				}
 			}
 		}
 	}

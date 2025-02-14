@@ -31,6 +31,7 @@ struct Cell {
 	int maxX = INT_MIN;
 };
 
+
 // A matrix of pixels
 class Image
 {
@@ -41,8 +42,15 @@ class Image
 		unsigned int bpp; // Bits per pixel
 		unsigned char* data; // Bytes with the pixel information
 	} TGAInfo;
-
 public:
+	//STRUCT FOR CONTAINING ALL THE TRIANGLES INFORMATION
+	struct sTriangleInfo {
+		Vector3 vertices[3];
+		Vector2 uvs[3];
+		Color colors[3];
+		Image* texture;
+	};
+
 	unsigned int width;
 	unsigned int height;
 	unsigned int bytes_per_pixel = 3; // Bits per pixel
@@ -57,6 +65,8 @@ public:
 
 	// Destructor
 	~Image();
+
+	
 
 	void Render();
 
@@ -108,8 +118,7 @@ public:
 	void ScanLineDDA(int x0, int y0, int x1, int y1, std::vector<Cell>& table);
 
 	// FUNCIÓN PARA DIBUJAR TRIÁNGULOS
-	void DrawTriangle(const Vector2& p0, const Vector2& p1, const Vector2& p2, const Color& borderColor, bool isFilled, const Color& fillColor);
-
+	void DrawTriangle(const sTriangleInfo& triangle, bool isFilled);
 	// FUNCIÓN PARA DIBUJAR CÍRCULOS
 	void DrawCircle(int x0, int y0, int r, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor);
 
@@ -120,8 +129,7 @@ public:
 	void MidpointCircleFill(int x0, int y0, int r, const Color& color);
 
 	// FUNCIÓN PARA DIBUJAR TRIÁNGULOS INTERPOLADOS
-	void DrawTriangleInterpolated(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Color& c0, const Color& c1, const Color& c2);
-
+	void Image::DrawTriangleInterpolated(const sTriangleInfo &triangle, FloatImage* zbuffer);
 
 
 	// Used to easy code

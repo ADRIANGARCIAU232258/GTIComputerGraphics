@@ -25,7 +25,8 @@ void Entity::setModelMatrix(Matrix44 newModelMatrix) {
 }
 
 // Renderizamos la entidad en el framebuffer utilizando la cámara y el color especificado
-void Entity::Render(Image* framebuffer, Camera* camera, const Color& c) {
+void Entity::Render(Image* framebuffer, Camera* camera, FloatImage* zBuffer) {
+    const Color currentcolor;
     // Verificamos si la malla, el framebuffer o la cámara no están definidos
     if (!mesh || !framebuffer || !camera) {
         std::cout << "Error: mesh, framebuffer o cámara no están definidos" << std::endl; // Mensaje de depuración utilizado en el desarrollo de la práctica
@@ -34,6 +35,7 @@ void Entity::Render(Image* framebuffer, Camera* camera, const Color& c) {
 
     // Obtenemos los vértices de la malla
     const std::vector<Vector3>& vertices = mesh->GetVertices();
+	const std::vector<Vector2>& uvs = mesh->GetUVs();
     // Verifican si no hay vértices en la malla
     if (vertices.empty()) {
         std::cout << "Error: No hay vértices en la malla" << std::endl; // Lo mismo con este mensaje. Se ha usado con el fin de encontrar los errores surgidos
@@ -71,6 +73,18 @@ void Entity::Render(Image* framebuffer, Camera* camera, const Color& c) {
         v2.x = (v2.x * 0.5 + 0.5) * framebuffer->width;
         v2.y = (v2.y * 0.5 + 0.5) * framebuffer->height;
 
+        // Creamos la estructura sTriangleInfo
+        Image::sTriangleInfo triangle;
+        triangle.vertices[0] = v0;
+        triangle.vertices[1] = v1;
+        triangle.vertices[2] = v2;
+        triangle.colors[0] = Color(255, 0, 0);
+        triangle.colors[1] = Color(0, 255, 0);
+        triangle.colors[2] = Color(0, 0, 255);
+        triangle.uvs[0] = uvs[i];
+        triangle.uvs[1] = uvs[i + 1];
+        triangle.uvs[2] = uvs[i + 2];
+        triangle.texture = nullptr; // Asumimos que no hay textura por el momneto
         
         switch (mode) {
         case eRenderMode::POINTCLOUD:
@@ -79,19 +93,19 @@ void Entity::Render(Image* framebuffer, Camera* camera, const Color& c) {
 
         case eRenderMode::WIREFRAME:
             // Usamos DrawLineDDA para dibujar las líneas de los triángulos
-            framebuffer->DrawLineDDA((int)v0.x, (int)v0.y, (int)v1.x, (int)v1.y, c);
-            framebuffer->DrawLineDDA((int)v1.x, (int)v1.y, (int)v2.x, (int)v2.y, c);
-            framebuffer->DrawLineDDA((int)v2.x, (int)v2.y, (int)v0.x, (int)v0.y, c);
+            framebuffer->DrawLineDDA((int)v0.x, (int)v0.y, (int)v1.x, (int)v1.y, Color::GREEN);
+            framebuffer->DrawLineDDA((int)v1.x, (int)v1.y, (int)v2.x, (int)v2.y, Color::WHITE);
+            framebuffer->DrawLineDDA((int)v2.x, (int)v2.y, (int)v0.x, (int)v0.y, Color::BLUE);
             break;
 
         case eRenderMode::TRIANGLES:
             // Rellenamos triángulos con color
-            framebuffer->DrawTriangle(Vector2(v0.x, v0.y), Vector2(v1.x, v1.y), Vector2(v2.x, v2.y), c, true, c);
+            framebuffer->DrawTriangle(triangle, true);
             break;
 
         case eRenderMode::TRIANGLES_INTERPOLATED:
             // Rellenamos triángulos con interpolación de colores
-            framebuffer->DrawTriangleInterpolated(v0, v1, v2, Color(255, 255, 0), Color(0, 255, 0), Color(0, 0, 255));
+            framebuffer->DrawTriangleInterpolated(triangle, zBuffer);
             break;
         }
     }
