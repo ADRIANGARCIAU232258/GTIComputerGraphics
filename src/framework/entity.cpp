@@ -91,7 +91,7 @@ void Entity::Render(Image* framebuffer, Camera* camera, const Color& c) {
 
         case eRenderMode::TRIANGLES_INTERPOLATED:
             // Rellenamos triángulos con interpolación de colores
-            framebuffer->DrawTriangleInterpolated(v0, v1, v2, Color(255, 0, 0), Color(0, 255, 0), Color(0, 0, 255));
+            framebuffer->DrawTriangleInterpolated(v0, v1, v2, Color(255, 255, 0), Color(0, 255, 0), Color(0, 0, 255));
             break;
         }
     }

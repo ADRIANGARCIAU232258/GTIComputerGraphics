@@ -599,11 +599,6 @@ void Image::DrawTriangleInterpolated(const Vector3& p0, const Vector3& p1, const
 
 
 
-
-
-
-
-
 #ifndef IGNORE_LAMBDAS
 
 // You can apply and algorithm for two images and store the result in the first one

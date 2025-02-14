@@ -91,7 +91,7 @@ void Application::Render(void)
 	if (currentMode == 1) {
 		// Dibujamos una sola entidad
 		if (!entities.empty()) {
-			entities[0]->Render(&framebuffer, &camera, colors[0]);
+			entities[1]->Render(&framebuffer, &camera, colors[0]);
 		}
 	}
 	else if (currentMode == 2) {
@@ -131,20 +131,20 @@ void Application::Update(float dt)
 	}
 	
 	if (currentMode == 2) {
-		// Rotamos entidad 0 sobre su propio eje Y
+		// Rotamos entidad 2 sobre su propio eje Y
 		float angle = 90.0f * dt; // Seteamos velocidad de rotación
 		Matrix44 rotationMatrix;
 		rotationMatrix.SetRotation(angle * DEG2RAD, Vector3(0, 1, 0)); // Rotamos sobre el eje Y
 
 		// Aplicamos solo la rotación sin modificar la traslaciön
-		entities[0]->modelMatrix = entities[0]->modelMatrix * rotationMatrix;
+		entities[2]->modelMatrix = entities[2]->modelMatrix * rotationMatrix;
 
-		// Movemos verticalmente entidad 1 en el eje Y
+		// Movemos verticalmente entidad 0 en el eje Y
 		Matrix44 translationMatrix;
 		translationMatrix.SetTranslation(0, sin(4 * time) / 20, 0);
-		entities[1]->modelMatrix = translationMatrix * entities[1]->modelMatrix;
+		entities[0]->modelMatrix = translationMatrix * entities[0]->modelMatrix;
 
-		// Modificamos tamaño de entidad 2
+		// Modificamos tamaño de entidad 1
 		float scaleFactor = 1.0f + 0.01f * sin(time); // Cambio de escala (factor de tamaño)
 
 		// Aplicamos la escala directamente a la matriz de la entidad
@@ -155,9 +155,7 @@ void Application::Update(float dt)
 		scaleMatrix._44 = 1.0f;        
 
 		// Aplicamos la escala a la entidad sin que esta se mueva
-		entities[2]->modelMatrix = scaleMatrix * entities[2]->modelMatrix;
-
-
+		entities[1]->modelMatrix = scaleMatrix * entities[1]->modelMatrix;
 	}
 
 	// Actualizamos las matrices de la cámara
