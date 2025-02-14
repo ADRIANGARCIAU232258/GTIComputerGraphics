@@ -92,13 +92,23 @@ void Application::Render(void)
 	if (currentMode == 1) {
 		// Dibujamos una sola entidad
 		if (!entities.empty()) {
-			entities[1]->Render(&framebuffer, &camera, &zBuffer);
+			if (zBufferEnabled) {
+				entities[1]->Render(&framebuffer, &camera, &zBuffer);
+			}
+			else {
+				entities[1]->Render(&framebuffer, &camera, nullptr);
+			}
 		}
 	}
 	else if (currentMode == 2) {
 		// Dibujamos múltiples entidades con animaciçon
 		for (size_t i = 0; i < entities.size(); ++i) {
-			entities[i]->Render(&framebuffer, &camera, &zBuffer);
+			if (zBufferEnabled) {
+				entities[1]->Render(&framebuffer, &camera, &zBuffer);
+			}
+			else {
+				entities[1]->Render(&framebuffer, &camera, nullptr);
+			}
 		}
 	}
 
@@ -262,6 +272,10 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
 					camera_fov = 179.0f;
 				}
 			}
+		case SDLK_z:
+			// Alternamos el estado del z-buffer
+			zBufferEnabled = !zBufferEnabled;
+			std::cout << ("Z-Buffer cambiado") << std::endl;
 			break;
 	}
 

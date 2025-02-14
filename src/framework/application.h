@@ -18,7 +18,7 @@ public:
 	bool drawCircles = false;
 	bool drawTriangles = false;
 	bool isFilled = false;
-
+	bool zBufferEnabled = true;
 	std::vector<Entity*> entities; // Definimos vector para almacenar las entidades
 
 	bool toggleInterpolation = false;
