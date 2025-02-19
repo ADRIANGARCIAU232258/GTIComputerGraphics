@@ -2,6 +2,8 @@
 #include "mesh.h"
 #include "shader.h"
 #include "utils.h" 
+#include <fstream>
+#include <iostream>
 
 Application::Application(const char* caption, int width, int height)
 {
@@ -15,7 +17,6 @@ Application::Application(const char* caption, int width, int height)
 	this->window_width = w;
 	this->window_height = h;
 	this->keystate = SDL_GetKeyboardState(nullptr);
-
 	this->framebuffer.Resize(w, h);
 }
 
@@ -25,15 +26,31 @@ Application::~Application()
 
 void Application::Init(void)
 {
+
+
+	std::ifstream vs_file("C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.vs");
+	std::ifstream fs_file("C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.fs");
+
+	if (!vs_file.is_open() || !fs_file.is_open()) {
+		std::cerr << "Error: No se encontraron los archivos del shader." << std::endl;
+	}
+
 	std::cout << "Initiating app..." << std::endl;
+	quadshader = Shader::Get("C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.vs", "C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.fs");
+	quadmesh = new Mesh();
+	quadmesh->CreateQuad();
+
 }
 
 // Render one frame
 void Application::Render(void)
 {
-	// ...
+	glEnable(GL_DEPTH_TEST);
+	quadshader->Enable();
+	quadmesh->Render();
+	quadshader->Disable();
 
-	framebuffer.Render();
+	
 }
 
 // Called after render

@@ -7,7 +7,8 @@
 #include "main/includes.h"
 #include "framework.h"
 #include "image.h"
-
+#include "mesh.h"
+#include "shader.h"
 class Application
 {
 public:
@@ -35,6 +36,11 @@ public:
 
 	// CPU Global framebuffer
 	Image framebuffer;
+
+	Shader* quadshader;
+	Shader* texshader;
+	Mesh* quadmesh;
+	Mesh* texmesh;
 
 	// Constructor and main methods
 	Application(const char* caption, int width, int height);
