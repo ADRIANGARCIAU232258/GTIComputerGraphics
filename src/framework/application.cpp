@@ -171,29 +171,19 @@ Application::~Application()
 
 void Application::Init(void)
 {
+
+
+	std::ifstream vs_file("C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.vs");
+	std::ifstream fs_file("C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.fs");
+
+	if (!vs_file.is_open() || !fs_file.is_open()) {
+		std::cerr << "Error: No se encontraron los archivos del shader." << std::endl;
+	}
+
 	std::cout << "Initiating app..." << std::endl;
-	quadshader = Shader::Get("shaders/quad.vs", "shaders/quad.fs");
+	quadshader = Shader::Get("C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.vs", "C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.fs");
 	quadmesh = new Mesh();
 	quadmesh->CreateQuad();
-
-	// Compilamos todos los shaders y los guardamos en un vector
-	shaders.push_back(new Shader());
-	shaders.back()->CompileFromMemory(vertex_shader_code, fragment_shader_code_a);
-
-	shaders.push_back(new Shader());
-	shaders.back()->CompileFromMemory(vertex_shader_code, fragment_shader_code_b);
-
-	shaders.push_back(new Shader());
-	shaders.back()->CompileFromMemory(vertex_shader_code, fragment_shader_code_c);
-
-	shaders.push_back(new Shader());
-	shaders.back()->CompileFromMemory(vertex_shader_code, fragment_shader_code_d);
-
-	shaders.push_back(new Shader());
-	shaders.back()->CompileFromMemory(vertex_shader_code, fragment_shader_code_e);
-
-	shaders.push_back(new Shader());
-	shaders.back()->CompileFromMemory(vertex_shader_code, fragment_shader_code_f);
 
 }
 
