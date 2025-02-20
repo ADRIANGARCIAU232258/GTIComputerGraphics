@@ -21,6 +21,10 @@ public:
 
 	float time;
 
+	std::vector<Shader*> shaders; // Declaramos el vector de sahders
+	int current_shader; // Shader actual
+	int current_exercise; // Ejercicio actual
+
 	// Input
 	const Uint8* keystate;
 	int mouse_state; // Tells which buttons are pressed

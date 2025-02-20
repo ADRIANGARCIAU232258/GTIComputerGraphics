@@ -67,6 +67,9 @@ public:
 	
 	void FlipY(); // Flip the image top-down
 
+	unsigned int GetWidth() const { return width; }
+	unsigned int GetHeight() const { return height; }
+
 	// Fill the image with the color C
 	void Fill(const Color& c) { for(unsigned int pos = 0; pos < width*height; ++pos) pixels[pos] = c; }
 
