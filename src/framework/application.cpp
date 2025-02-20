@@ -26,19 +26,11 @@ Application::~Application()
 
 void Application::Init(void)
 {
-
-
-	std::ifstream vs_file("C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.vs");
-	std::ifstream fs_file("C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.fs");
-
-	if (!vs_file.is_open() || !fs_file.is_open()) {
-		std::cerr << "Error: No se encontraron los archivos del shader." << std::endl;
-	}
-
 	std::cout << "Initiating app..." << std::endl;
-	quadshader = Shader::Get("C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.vs", "C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.fs");
 	quadmesh = new Mesh();
 	quadmesh->CreateQuad();
+	quadshader = Shader::Get("shaders/quad.vs", "shaders/quad.fs");
+	
 
 }
 
