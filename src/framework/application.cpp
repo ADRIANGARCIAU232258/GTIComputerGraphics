@@ -151,8 +151,8 @@ Application::Application(const char* caption, int width, int height)
 {
 	this->window = createWindow(caption, width, height);
 
-	int w,h;
-	SDL_GetWindowSize(window,&w,&h);
+	int w, h;
+	SDL_GetWindowSize(window, &w, &h);
 
 	this->mouse_state = 0;
 	this->time = 0.f;
@@ -171,19 +171,29 @@ Application::~Application()
 
 void Application::Init(void)
 {
-
-
-	std::ifstream vs_file("C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.vs");
-	std::ifstream fs_file("C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.fs");
-
-	if (!vs_file.is_open() || !fs_file.is_open()) {
-		std::cerr << "Error: No se encontraron los archivos del shader." << std::endl;
-	}
-
 	std::cout << "Initiating app..." << std::endl;
-	quadshader = Shader::Get("C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.vs", "C:\\Ubicaciones JAN\\lab4_5\\res\\shaders\\quad.fs");
+	quadshader = Shader::Get("shaders/quad.vs", "shaders/quad.fs");
 	quadmesh = new Mesh();
 	quadmesh->CreateQuad();
+
+	// Compilamos todos los shaders y los guardamos en un vector
+	shaders.push_back(new Shader());
+	shaders.back()->CompileFromMemory(vertex_shader_code, fragment_shader_code_a);
+
+	shaders.push_back(new Shader());
+	shaders.back()->CompileFromMemory(vertex_shader_code, fragment_shader_code_b);
+
+	shaders.push_back(new Shader());
+	shaders.back()->CompileFromMemory(vertex_shader_code, fragment_shader_code_c);
+
+	shaders.push_back(new Shader());
+	shaders.back()->CompileFromMemory(vertex_shader_code, fragment_shader_code_d);
+
+	shaders.push_back(new Shader());
+	shaders.back()->CompileFromMemory(vertex_shader_code, fragment_shader_code_e);
+
+	shaders.push_back(new Shader());
+	shaders.back()->CompileFromMemory(vertex_shader_code, fragment_shader_code_f);
 
 }
 
@@ -207,36 +217,36 @@ void Application::Update(float seconds_elapsed)
 }
 
 //keyboard press event 
-void Application::OnKeyPressed( SDL_KeyboardEvent event )
+void Application::OnKeyPressed(SDL_KeyboardEvent event)
 {
 	// KEY CODES: https://wiki.libsdl.org/SDL2/SDL_Keycode
 	switch (event.keysym.sym) {
-		case SDLK_ESCAPE: exit(0); break;
-		case SDLK_1:
-		case SDLK_KP_1: current_exercise = 1; break;
-		case SDLK_2: 
-		case SDLK_KP_2: current_exercise = 2; break;
-		case SDLK_3: 
-		case SDLK_KP_3: current_exercise = 3; break;
-		case SDLK_4: 
-		case SDLK_KP_4: current_exercise = 4; break;
-		case SDLK_a: current_shader = 0; break;
-		case SDLK_b: current_shader = 1; break;
-		case SDLK_c: current_shader = 2; break;
-		case SDLK_d: current_shader = 3; break;
-		case SDLK_e: current_shader = 4; break;
-		case SDLK_f: current_shader = 5; break;
+	case SDLK_ESCAPE: exit(0); break;
+	case SDLK_1:
+	case SDLK_KP_1: current_exercise = 1; break;
+	case SDLK_2:
+	case SDLK_KP_2: current_exercise = 2; break;
+	case SDLK_3:
+	case SDLK_KP_3: current_exercise = 3; break;
+	case SDLK_4:
+	case SDLK_KP_4: current_exercise = 4; break;
+	case SDLK_a: current_shader = 0; break;
+	case SDLK_b: current_shader = 1; break;
+	case SDLK_c: current_shader = 2; break;
+	case SDLK_d: current_shader = 3; break;
+	case SDLK_e: current_shader = 4; break;
+	case SDLK_f: current_shader = 5; break;
 	}
 }
 
-void Application::OnMouseButtonDown( SDL_MouseButtonEvent event )
+void Application::OnMouseButtonDown(SDL_MouseButtonEvent event)
 {
 	if (event.button == SDL_BUTTON_LEFT) {
 
 	}
 }
 
-void Application::OnMouseButtonUp( SDL_MouseButtonEvent event )
+void Application::OnMouseButtonUp(SDL_MouseButtonEvent event)
 {
 	if (event.button == SDL_BUTTON_LEFT) {
 
@@ -245,7 +255,7 @@ void Application::OnMouseButtonUp( SDL_MouseButtonEvent event )
 
 void Application::OnMouseMove(SDL_MouseButtonEvent event)
 {
-	
+
 }
 
 void Application::OnWheel(SDL_MouseWheelEvent event)
@@ -256,6 +266,6 @@ void Application::OnWheel(SDL_MouseWheelEvent event)
 }
 
 void Application::OnFileChanged(const char* filename)
-{ 
+{
 	Shader::ReloadSingleShader(filename);
 }
