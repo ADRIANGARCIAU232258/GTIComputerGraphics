@@ -1,14 +1,21 @@
 varying vec2 v_uvs;
 uniform sampler2D u_texture;
-uniform float threshold; // Ajustable (ejemplo: 0.5 para un corte medio)
+uniform float angle; // Ángulo en radianes
 
 void main()
 {
-    vec4 texture_color = texture2D(u_texture, v_uvs);
-    float gray = dot(texture_color.rgb, vec3(0.299, 0.587, 0.114));
-    float threshold = 0.5;
-    // Umbral aplicado directamente a cada canal de color
-    vec3 bw = step(vec3(threshold), vec3(gray)); 
-    
-    gl_FragColor = vec4(bw, texture_color.a);
+    float angle = radians(45.0);
+    vec2 center = vec2(0.5);
+    vec2 uv = v_uvs - center; // Mover origen al centro
+
+    // Matriz de rotación
+    float cosA = cos(angle);
+    float sinA = sin(angle);
+    mat2 rotation = mat2(cosA, -sinA, sinA, cosA);
+
+    uv = rotation * uv;
+    uv += center; // Devolver al espacio original
+    uv = fract(uv); // Repite la textura en los bordes
+
+    gl_FragColor = texture2D(u_texture, uv);
 }

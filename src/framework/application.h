@@ -22,6 +22,7 @@ public:
 	float time;
 
 	std::vector<Shader*> shaders; // Declaramos el vector de shaders
+	std::vector<Shader*> texshaders; // Declaramos el vector de shaders de texturas;
 	int current_shader; // Shader actual
 	int current_exercise; // Ejercicio actual
 

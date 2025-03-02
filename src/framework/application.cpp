@@ -19,6 +19,19 @@ void main()
     gl_Position = vec4(position, 1.0);
     TexCoord = texCoord;
 }
+
+)";
+
+const char* vertex_tshader_code = R"(
+varying vec2 v_uvs; 
+void main()
+{
+// Set vertex uvs
+	v_uvs = gl_MultiTexCoord0.xy;
+// Output clip-space
+	gl_Position = gl_Vertex;
+}
+
 )";
 
 const char* fragment_shader_code_a = R"(
@@ -150,6 +163,93 @@ void main()
 }
 )";
 
+const char* fragment_shader_code_ai = R"(
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
+
+void main()
+{
+    vec4 inverter = vec4 (1.0);
+    vec4 texture_color = texture2D( u_texture , v_uvs );
+    gl_FragColor = inverter-texture_color;
+}
+)";
+
+const char* fragment_shader_code_bi = R"(
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
+
+void main()
+{
+    vec4 texture_color = texture2D( u_texture , v_uvs );
+    float gray = dot(texture_color.rgb, vec3(0.299, 0.587, 0.114));
+    gl_FragColor = vec4(vec3(gray), texture_color.a);
+}
+)";
+
+const char* fragment_shader_code_ci = R"(
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
+
+void main()
+{
+    vec4 texture_color = texture2D(u_texture, v_uvs);
+    float gray = dot(texture_color.rgb, vec3(0.299, 0.587, 0.114)); // Convertimos a escala de grises
+    vec3 yellow_tone = vec3(1.0, 1.0, 0.0); 
+    gl_FragColor = vec4(gray * yellow_tone, texture_color.a);
+}
+
+)";
+
+const char* fragment_shader_code_di = R"(
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
+
+void main()
+{
+    float blurSize = 0.005; // Valor arbitrario de desenfoque
+
+    float kernel[5] = float[](0.06136, 0.24477, 0.38774, 0.24477, 0.06136);
+    vec4 sum = vec4(0.0);
+
+    for (int i = -2; i <= 2; i++) {
+        vec2 offset = vec2(float(i) * blurSize, 0.0); 
+        sum += texture2D(u_texture, v_uvs + offset) * kernel[i + 2];
+    }
+
+    gl_FragColor = sum;
+}
+)";
+
+const char* fragment_shader_code_ei = R"(
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
+uniform float threshold; // Ajustable (ejemplo: 0.5 para un corte medio)
+
+void main()
+{
+    vec4 texture_color = texture2D(u_texture, v_uvs);
+    float gray = dot(texture_color.rgb, vec3(0.299, 0.587, 0.114));
+    float threshold = 0.5;
+    // Umbral aplicado directamente a cada canal de color
+    vec3 bw = step(vec3(threshold), vec3(gray)); 
+    
+    gl_FragColor = vec4(bw, texture_color.a);
+})";
+
+const char* fragment_shader_code_fi = R"(
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
+
+void main()
+{
+    vec2 center = vec2(0.5);
+    float dist = length(v_uvs - center); // Distancia al centro
+    vec4 texture_color = texture2D( u_texture , v_uvs );
+    gl_FragColor = texture_color*(1-dist);
+}
+)";
+
 Application::Application(const char* caption, int width, int height)
 {
 	this->window = createWindow(caption, width, height);
@@ -188,6 +288,7 @@ void Application::Init(void)
 
 
 	// Compilamos todos los shaders y los guardamos en un vector
+
 	shaders.push_back(new Shader());
 	shaders.back()->CompileFromMemory(vertex_shader_code, fragment_shader_code_a);
 
@@ -206,6 +307,26 @@ void Application::Init(void)
 	shaders.push_back(new Shader());
 	shaders.back()->CompileFromMemory(vertex_shader_code, fragment_shader_code_f);
 
+	texshaders.push_back(new Shader());
+	texshaders.back()->CompileFromMemory(vertex_tshader_code, fragment_shader_code_ai);
+
+	texshaders.push_back(new Shader());
+	texshaders.back()->CompileFromMemory(vertex_tshader_code, fragment_shader_code_bi);
+
+	texshaders.push_back(new Shader());
+	texshaders.back()->CompileFromMemory(vertex_tshader_code, fragment_shader_code_ci);
+
+	texshaders.push_back(new Shader());
+	texshaders.back()->CompileFromMemory(vertex_tshader_code, fragment_shader_code_di);
+
+	texshaders.push_back(new Shader());
+	texshaders.back()->CompileFromMemory(vertex_tshader_code, fragment_shader_code_ei);
+
+	texshaders.push_back(new Shader());
+	texshaders.back()->CompileFromMemory(vertex_tshader_code, fragment_shader_code_fi);
+
+
+
 }
 
 // Render one frame
@@ -221,10 +342,10 @@ void Application::Render(void)
 	}
 	if (current_exercise == 2) {
 		glEnable(GL_DEPTH_TEST);
-		texshader->Enable();
-		texshader->SetTexture("u_texture", texture);
+		texshaders[current_shader]->Enable();
+		texshaders[current_shader]->SetTexture("u_texture", texture);
 		quadmesh->Render();
-		texshader->Disable();
+		texshaders[current_shader]->Disable();
 	}
 }
 

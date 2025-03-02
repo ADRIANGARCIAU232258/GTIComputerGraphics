@@ -59,4 +59,68 @@ void main()
     vec3 yellow_tone = vec3(1.0, 1.0, 0.0); 
     gl_FragColor = vec4(gray * yellow_tone, texture_color.a);
 }
+\\
+
+SHADER DESENFOCADO (no acaba de furular)
+//
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
+
+void main()
+{
+    float blurSize = 0.005; // Valor arbitrario de desenfoque
+
+    float kernel[5] = float[](0.06136, 0.24477, 0.38774, 0.24477, 0.06136);
+    vec4 sum = vec4(0.0);
+
+    for (int i = -2; i <= 2; i++) {
+        vec2 offset = vec2(float(i) * blurSize, 0.0); 
+        sum += texture2D(u_texture, v_uvs + offset) * kernel[i + 2];
+    }
+
+    gl_FragColor = sum;
+}
+\\
+
+SHADER BLANCO Y NEGRO CONTRASTE ALTO (tampoco funciona del todo)
+//
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
+uniform float threshold; // Ajustable (ejemplo: 0.5 para un corte medio)
+
+void main()
+{
+    vec4 texture_color = texture2D(u_texture, v_uvs);
+    float gray = dot(texture_color.rgb, vec3(0.299, 0.587, 0.114));
+    float threshold = 0.5;
+    // Umbral aplicado directamente a cada canal de color
+    vec3 bw = step(vec3(threshold), vec3(gray)); 
+    
+    gl_FragColor = vec4(bw, texture_color.a);
+
+\\
+SHADER ROTACIÓN IMAGEN
+//
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
+uniform float angle; // Ángulo en radianes
+
+void main()
+{
+    float angle = radians(45.0);
+    vec2 center = vec2(0.5);
+    vec2 uv = v_uvs - center; // Mover origen al centro
+
+    // Matriz de rotación
+    float cosA = cos(angle);
+    float sinA = sin(angle);
+    mat2 rotation = mat2(cosA, -sinA, sinA, cosA);
+
+    uv = rotation * uv;
+    uv += center; // Devolver al espacio original
+    uv = fract(uv); // Repite la textura en los bordes
+
+    gl_FragColor = texture2D(u_texture, uv);
+}
+\\
 
