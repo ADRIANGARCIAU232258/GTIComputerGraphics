@@ -1,9 +1,8 @@
-varying vec2 v_uv;
-
+varying vec2 v_uvs; 
 void main()
 {
-	// Set vertex uvs
-	v_uv = gl_MultiTexCoord0.xy;
-	// Output clip-space
+// Set vertex uvs
+	v_uvs = gl_MultiTexCoord0.xy;
+// Output clip-space
 	gl_Position = gl_Vertex;
 }

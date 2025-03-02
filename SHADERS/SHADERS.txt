@@ -7,3 +7,56 @@ void main()
 	gl_FragColor = vec4(v_uv.x, 0.0, 1-v_uv.x, 1.0);
 }
 \\
+
+SHADER IMAGEN OSCURECIDA:
+//varying vec2 v_uvs;
+uniform sampler2D u_texture;
+
+void main()
+{
+    vec2 center = vec2(0.5);
+    float dist = length(v_uvs - center); // Distancia al centro
+    vec4 texture_color = texture2D( u_texture , v_uvs );
+    gl_FragColor = texture_color*(1-dist);
+}
+\\
+
+SHADER IMAGEN INVERTIDA:
+//
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
+
+void main()
+{
+    vec4 inverter = vec4 (1.0);
+    vec4 texture_color = texture2D( u_texture , v_uvs );
+    gl_FragColor = inverter-texture_color;
+}
+\\
+
+SHADER ESCALA GRISES:
+//
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
+
+void main()
+{
+    vec4 texture_color = texture2D( u_texture , v_uvs );
+    float gray = dot(texture_color.rgb, vec3(0.299, 0.587, 0.114));
+    gl_FragColor = vec4(vec3(gray), texture_color.a);
+}
+\\
+
+SHADER AMARILLO:
+//
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
+
+void main()
+{
+    vec4 texture_color = texture2D(u_texture, v_uvs);
+    float gray = dot(texture_color.rgb, vec3(0.299, 0.587, 0.114)); // Convertimos a escala de grises
+    vec3 yellow_tone = vec3(1.0, 1.0, 0.0); 
+    gl_FragColor = vec4(gray * yellow_tone, texture_color.a);
+}
+

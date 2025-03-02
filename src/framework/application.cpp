@@ -4,6 +4,7 @@
 #include "utils.h" 
 #include <fstream>
 #include <iostream>
+#include "texture.h"
 
 
 // Shaders
@@ -36,6 +37,7 @@ void main()
 
 const char* fragment_shader_code_b = R"(
 #version 330 core
+
 out vec4 FragColor;
 
 uniform vec2 u_resolution;
@@ -43,9 +45,10 @@ uniform vec2 u_resolution;
 void main()
 {
     vec2 uv = (gl_FragCoord.xy / u_resolution) * 2.0 - 1.0; // Normalizamos a [-1, 1]
-    float dist = length(uv); // Calculamos la distancia desde el centro
+    float dist = length(uv)/sqrt(2.0); // Calculamos la distancia desde el centro. Dividimos entre la distancia máxima para que el máximo sea 1.0.
     FragColor = vec4(vec3(dist), 1.0); // Usamos la distancia para el color
 }
+
 )";
 
 const char* fragment_shader_code_c = R"(
@@ -171,10 +174,18 @@ Application::~Application()
 
 void Application::Init(void)
 {
+	Image* fruit = new Image();
+	if (!fruit->LoadPNG("images/fruits.png", true)) {
+		std::cerr << "Error: No se pudo cargar la imagen." << std::endl;
+		return;
+	}
 	std::cout << "Initiating app..." << std::endl;
 	quadshader = Shader::Get("shaders/quad.vs", "shaders/quad.fs");
 	quadmesh = new Mesh();
 	quadmesh->CreateQuad();
+	texshader = Shader::Get("shaders/quad.vs", "shaders/quad.fs");
+	texture = Texture::Get("images/fruits.png");
+
 
 	// Compilamos todos los shaders y los guardamos en un vector
 	shaders.push_back(new Shader());
@@ -207,6 +218,13 @@ void Application::Render(void)
 		shaders[current_shader]->SetVector2("u_resolution", Vector2(this->window_width, this->window_height));
 		quadmesh->Render();
 		shaders[current_shader]->Disable();
+	}
+	if (current_exercise == 2) {
+		glEnable(GL_DEPTH_TEST);
+		texshader->Enable();
+		texshader->SetTexture("u_texture", texture);
+		quadmesh->Render();
+		texshader->Disable();
 	}
 }
 
