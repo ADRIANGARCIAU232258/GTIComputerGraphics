@@ -169,9 +169,9 @@ uniform sampler2D u_texture;
 
 void main()
 {
-    vec4 inverter = vec4 (1.0);
     vec4 texture_color = texture2D( u_texture , v_uvs );
-    gl_FragColor = inverter-texture_color;
+    float gray = dot(texture_color.rgb, vec3(0.299, 0.587, 0.114));
+    gl_FragColor = vec4(vec3(gray), texture_color.a);
 }
 )";
 
@@ -181,9 +181,9 @@ uniform sampler2D u_texture;
 
 void main()
 {
+    vec4 inverter = vec4 (1.0);
     vec4 texture_color = texture2D( u_texture , v_uvs );
-    float gray = dot(texture_color.rgb, vec3(0.299, 0.587, 0.114));
-    gl_FragColor = vec4(vec3(gray), texture_color.a);
+    gl_FragColor = inverter-texture_color;
 }
 )";
 
@@ -204,6 +204,35 @@ void main()
 const char* fragment_shader_code_di = R"(
 varying vec2 v_uvs;
 uniform sampler2D u_texture;
+uniform float threshold; // Ajustable (ejemplo: 0.5 para un corte medio)
+
+void main()
+{
+    vec4 texture_color = texture2D(u_texture, v_uvs);
+    float gray = dot(texture_color.rgb, vec3(0.299, 0.587, 0.114));
+    float threshold = 0.5;
+    // Umbral aplicado directamente a cada canal de color
+    vec3 bw = step(vec3(threshold), vec3(gray)); 
+    
+    gl_FragColor = vec4(bw, texture_color.a);
+})";
+
+const char* fragment_shader_code_ei = R"(
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
+
+void main()
+{
+    vec2 center = vec2(0.5);
+    float dist = length(v_uvs - center); // Distancia al centro
+    vec4 texture_color = texture2D( u_texture , v_uvs );
+    gl_FragColor = texture_color*(1-dist);
+}
+)";
+
+const char* fragment_shader_code_fi = R"(
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
 
 void main()
 {
@@ -221,36 +250,57 @@ void main()
 }
 )";
 
-const char* fragment_shader_code_ei = R"(
+const char* fragment_shader_code_gi = R"(
 varying vec2 v_uvs;
 uniform sampler2D u_texture;
-uniform float threshold; // Ajustable (ejemplo: 0.5 para un corte medio)
+uniform vec2 pixelSize;
+
+vec2 pixelate(vec2 coord, vec2 pixelSize) {
+    return floor(coord / pixelSize) * pixelSize;
+}
+
+void main() {
+    vec2 pixelated_uv = pixelate(v_uvs, pixelSize);
+    vec4 texture_color = texture2D(u_texture, pixelated_uv);
+    gl_FragColor = texture_color;
+}
+)";
+
+const char* fragment_shader_code_hi = R"(
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
+uniform float intensity; // Control de la intensidad de la distorsión
+
+void main()
+{
+    vec2 center = vec2(0.5); // Centro de la imagen
+    vec2 uv = v_uvs;
+
+    // Aplicar una distorsión fija basada en funciones seno y coseno
+    uv.x += sin(uv.y * 10.0) * 0.05 * intensity; // Deformación horizontal
+    uv.y += cos(uv.x * 10.0) * 0.05 * intensity; // Deformación vertical
+
+    // Recuperar el color de la textura deformada
+    vec4 texture_color = texture2D(u_texture, uv);
+    gl_FragColor = texture_color;
+}
+)";
+
+
+const char* fragment_shader_code_original = R"(
+varying vec2 v_uvs;
+uniform sampler2D u_texture;
 
 void main()
 {
     vec4 texture_color = texture2D(u_texture, v_uvs);
-    float gray = dot(texture_color.rgb, vec3(0.299, 0.587, 0.114));
-    float threshold = 0.5;
-    // Umbral aplicado directamente a cada canal de color
-    vec3 bw = step(vec3(threshold), vec3(gray)); 
-    
-    gl_FragColor = vec4(bw, texture_color.a);
-})";
-
-const char* fragment_shader_code_fi = R"(
-varying vec2 v_uvs;
-uniform sampler2D u_texture;
-
-void main()
-{
-    vec2 center = vec2(0.5);
-    float dist = length(v_uvs - center); // Distancia al centro
-    vec4 texture_color = texture2D( u_texture , v_uvs );
-    gl_FragColor = texture_color*(1-dist);
+    gl_FragColor = texture_color;
 }
 )";
 
 Application::Application(const char* caption, int width, int height)
+    : landscapeTexture(nullptr), quadmesh(nullptr), quadshader(nullptr), 
+    texmesh(nullptr), texshader(nullptr), texture(nullptr) // Inicializamos las variables miembro
 {
 	this->window = createWindow(caption, width, height);
 
@@ -279,12 +329,19 @@ void Application::Init(void)
 		std::cerr << "Error: No se pudo cargar la imagen." << std::endl;
 		return;
 	}
+
+    Image* landscape = new Image();
+    if (!landscape->LoadPNG("images/landscape.png", true)) {
+        std::cerr << "Error: No se pudo cargar la imagen." << std::endl;
+        return;
+    }
 	std::cout << "Initiating app..." << std::endl;
 	quadshader = Shader::Get("shaders/quad.vs", "shaders/quad.fs");
 	quadmesh = new Mesh();
 	quadmesh->CreateQuad();
 	texshader = Shader::Get("shaders/quad.vs", "shaders/quad.fs");
 	texture = Texture::Get("images/fruits.png");
+	landscapeTexture = Texture::Get("images/landscape.png");
 
 
 	// Compilamos todos los shaders y los guardamos en un vector
@@ -307,6 +364,7 @@ void Application::Init(void)
 	shaders.push_back(new Shader());
 	shaders.back()->CompileFromMemory(vertex_shader_code, fragment_shader_code_f);
 
+
 	texshaders.push_back(new Shader());
 	texshaders.back()->CompileFromMemory(vertex_tshader_code, fragment_shader_code_ai);
 
@@ -325,8 +383,14 @@ void Application::Init(void)
 	texshaders.push_back(new Shader());
 	texshaders.back()->CompileFromMemory(vertex_tshader_code, fragment_shader_code_fi);
 
+    texshaders.push_back(new Shader());
+    texshaders.back()->CompileFromMemory(vertex_tshader_code, fragment_shader_code_gi);
 
+    texshaders.push_back(new Shader());
+    texshaders.back()->CompileFromMemory(vertex_tshader_code, fragment_shader_code_hi);
 
+    texshaders.push_back(new Shader());
+    texshaders.back()->CompileFromMemory(vertex_tshader_code, fragment_shader_code_original);
 }
 
 // Render one frame
@@ -336,7 +400,7 @@ void Application::Render(void)
 		glEnable(GL_DEPTH_TEST);
 		shaders[current_shader]->Enable();
 		// Declaramos la resolución de la ventana al shader
-		shaders[current_shader]->SetVector2("u_resolution", Vector2(this->window_width, this->window_height));
+		shaders[current_shader]->SetVector2("u_resolution", Vector2(static_cast<float>(this->window_width), static_cast<float>(this->window_height)));
 		quadmesh->Render();
 		shaders[current_shader]->Disable();
 	}
@@ -347,6 +411,25 @@ void Application::Render(void)
 		quadmesh->Render();
 		texshaders[current_shader]->Disable();
 	}
+    if (current_exercise == 3) {
+        glEnable(GL_DEPTH_TEST);
+        if (current_shader == 6 || current_shader == 7 || current_shader == 8) { // Incluyendo el shader original
+            texshaders[current_shader]->Enable();
+            texshaders[current_shader]->SetTexture("u_texture", landscapeTexture);
+
+            if (current_shader == 6) { // Pixelación
+                texshaders[current_shader]->SetVector2("pixelSize", Vector2(0.025f, 0.025f)); // Tamaño de los píxeles
+            }
+            if (current_shader == 7) { // Deformación
+                float intensity = 1.0; // Valor para ajustar la intensidad de la deformación
+                texshaders[current_shader]->SetFloat("intensity", intensity);
+
+            }
+            quadmesh->Render();
+            texshaders[current_shader]->Disable();
+        }
+    }
+
 }
 
 // Called after render
@@ -364,17 +447,39 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
 	case SDLK_1:
 	case SDLK_KP_1: current_exercise = 1; break;
 	case SDLK_2:
-	case SDLK_KP_2: current_exercise = 2; break;
+    case SDLK_KP_2: current_exercise = 2; current_shader = 8; break;
 	case SDLK_3:
-	case SDLK_KP_3: current_exercise = 3; break;
+    case SDLK_KP_3: current_exercise = 3; current_shader = 8; break;
 	case SDLK_4:
 	case SDLK_KP_4: current_exercise = 4; break;
-	case SDLK_a: current_shader = 0; break;
-	case SDLK_b: current_shader = 1; break;
-	case SDLK_c: current_shader = 2; break;
-	case SDLK_d: current_shader = 3; break;
-	case SDLK_e: current_shader = 4; break;
-	case SDLK_f: current_shader = 5; break;
+    default:
+        if (current_exercise == 1) {
+            switch (event.keysym.sym) {
+            case SDLK_a: current_shader = 0; break;
+            case SDLK_b: current_shader = 1; break;
+            case SDLK_c: current_shader = 2; break;
+            case SDLK_d: current_shader = 3; break;
+            case SDLK_e: current_shader = 4; break;
+            case SDLK_f: current_shader = 5; break;
+            }
+        }
+        else if (current_exercise == 2) {
+            switch (event.keysym.sym) {
+            case SDLK_a: current_shader = 0; break;
+            case SDLK_b: current_shader = 1; break;
+            case SDLK_c: current_shader = 2; break;
+            case SDLK_d: current_shader = 3; break;
+            case SDLK_e: current_shader = 4; break;
+            case SDLK_f: current_shader = 5; break;
+            }
+        }
+        else if (current_exercise == 3) {
+            switch (event.keysym.sym) {
+            case SDLK_a: current_shader = 6; break;
+            case SDLK_b: current_shader = 7; break;
+            }
+        }
+        break;
 	}
 }
 

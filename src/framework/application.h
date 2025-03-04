@@ -47,6 +47,8 @@ public:
 	Mesh* quadmesh;
 	Mesh* texmesh;
 	Texture* texture;
+	Texture* landscapeTexture;
+
 	// Constructor and main methods
 	Application(const char* caption, int width, int height);
 	~Application();
