@@ -338,10 +338,16 @@ void Application::Init(void)
 	std::cout << "Initiating app..." << std::endl;
 	quadshader = Shader::Get("shaders/quad.vs", "shaders/quad.fs");
 	quadmesh = new Mesh();
+    leemesh = new Mesh();
 	quadmesh->CreateQuad();
 	texshader = Shader::Get("shaders/quad.vs", "shaders/quad.fs");
 	texture = Texture::Get("images/fruits.png");
 	landscapeTexture = Texture::Get("images/landscape.png");
+    mshader = Shader::Get("shaders/simple.vs", "shaders/simple.fs");
+    mtexture = Texture::Get("textures/lee_color_specular.tga");
+	leemesh->LoadOBJ("meshes/lee.obj");
+
+    
 
 
 	// Compilamos todos los shaders y los guardamos en un vector
@@ -429,7 +435,13 @@ void Application::Render(void)
             texshaders[current_shader]->Disable();
         }
     }
-
+    if (current_exercise == 4) {
+        glEnable(GL_DEPTH_TEST);
+        mshader->Enable();
+        //mshader->SetTexture("u_texture", mtexture);
+        leemesh->Render();
+        mshader->Disable();
+    }
 }
 
 // Called after render

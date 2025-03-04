@@ -48,6 +48,9 @@ public:
 	Mesh* texmesh;
 	Texture* texture;
 	Texture* landscapeTexture;
+	Shader* mshader;
+	Texture* mtexture;
+	Mesh* leemesh;
 
 	// Constructor and main methods
 	Application(const char* caption, int width, int height);
