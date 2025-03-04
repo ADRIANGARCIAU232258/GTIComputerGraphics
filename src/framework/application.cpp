@@ -445,7 +445,7 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
 	switch (event.keysym.sym) {
 	case SDLK_ESCAPE: exit(0); break;
 	case SDLK_1:
-	case SDLK_KP_1: current_exercise = 1; break;
+    case SDLK_KP_1: current_exercise = 1; current_shader = 0; break;
 	case SDLK_2:
     case SDLK_KP_2: current_exercise = 2; current_shader = 8; break;
 	case SDLK_3:
