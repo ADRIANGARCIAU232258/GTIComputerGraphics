@@ -343,7 +343,7 @@ void Application::Init(void)
 	texshader = Shader::Get("shaders/quad.vs", "shaders/quad.fs");
 	texture = Texture::Get("images/fruits.png");
 	landscapeTexture = Texture::Get("images/landscape.png");
-    mshader = Shader::Get("shaders/simple.vs", "shaders/simple.fs");
+    mshader = Shader::Get("shaders/raster.vs", "shaders/raster.fs");
     mtexture = Texture::Get("textures/lee_color_specular.tga");
 	leemesh->LoadOBJ("meshes/lee.obj");
     camera = new Camera();
