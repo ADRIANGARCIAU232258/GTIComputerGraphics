@@ -65,9 +65,8 @@ void main()
 )";
 
 const char* fragment_shader_code_c = R"(
-#version 330 core
-out vec4 FragColor;
 
+out vec4 FragColor;
 uniform vec2 u_resolution;
 
 void main()
@@ -91,9 +90,7 @@ void main()
 )";
 
 const char* fragment_shader_code_d = R"(
-#version 330 core
 out vec4 FragColor;
-
 uniform vec2 u_resolution;
 
 void main()
@@ -119,9 +116,8 @@ void main()
 )";
 
 const char* fragment_shader_code_e = R"(
-#version 330 core
-out vec4 FragColor;
 
+out vec4 FragColor;
 uniform vec2 u_resolution;
 
 void main()
@@ -133,9 +129,7 @@ void main()
 )";
 
 const char* fragment_shader_code_f = R"(
-#version 330 core
 out vec4 FragColor;
-
 uniform vec2 u_resolution;
 
 void main()
@@ -236,20 +230,16 @@ uniform sampler2D u_texture;
 
 void main()
 {
-    float blurSize = 0.005; // Valor arbitrario de desenfoque
-
-    float kernel[5] = float[](0.06136, 0.24477, 0.38774, 0.24477, 0.06136);
-    vec4 sum = vec4(0.0);
-
-    for (int i = -2; i <= 2; i++) {
-        vec2 offset = vec2(float(i) * blurSize, 0.0); 
-        sum += texture2D(u_texture, v_uvs + offset) * kernel[i + 2];
-    }
-
+   vec2 tex_offset = vec2(0.005); // Controla el desenfoque
+    vec4 sum = texture2D(u_texture, v_uvs) * 0.4;
+    sum += texture2D(u_texture, v_uvs + tex_offset) * 0.15;
+    sum += texture2D(u_texture, v_uvs - tex_offset) * 0.15;
+    sum += texture2D(u_texture, v_uvs + vec2(tex_offset.x, -tex_offset.y)) * 0.15;
+    sum += texture2D(u_texture, v_uvs + vec2(-tex_offset.x, tex_offset.y)) * 0.15;
+    
     gl_FragColor = sum;
 }
 )";
-
 const char* fragment_shader_code_gi = R"(
 varying vec2 v_uvs;
 uniform sampler2D u_texture;
@@ -431,7 +421,7 @@ void Application::Render(void)
                 texshaders[current_shader]->SetVector2("pixelSize", Vector2(0.025f, 0.025f)); // Tamaño de los píxeles
             }
             if (current_shader == 7) { // Deformación
-                float intensity = 1.0; // Valor para ajustar la intensidad de la deformación
+                float intensity = 1.0*sin(time*1.8); // Valor para ajustar la intensidad de la deformación
                 texshaders[current_shader]->SetFloat("intensity", intensity);
 
             }
