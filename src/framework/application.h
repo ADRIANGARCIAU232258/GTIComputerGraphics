@@ -9,6 +9,7 @@
 #include "image.h"
 #include "mesh.h"
 #include "shader.h"
+#include "entity.h"
 class Application
 {
 public:
@@ -51,6 +52,9 @@ public:
 	Shader* mshader;
 	Texture* mtexture;
 	Mesh* leemesh;
+	Matrix44 model;
+	Camera* camera;
+	Entity* entity;
 
 	// Constructor and main methods
 	Application(const char* caption, int width, int height);

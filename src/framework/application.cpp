@@ -346,8 +346,12 @@ void Application::Init(void)
     mshader = Shader::Get("shaders/simple.vs", "shaders/simple.fs");
     mtexture = Texture::Get("textures/lee_color_specular.tga");
 	leemesh->LoadOBJ("meshes/lee.obj");
+    camera = new Camera();
+    entity = new Entity();
+    entity->mesh = leemesh;
+    entity->shader = mshader;
+    entity->texture = mtexture;
 
-    
 
 
 	// Compilamos todos los shaders y los guardamos en un vector
@@ -438,8 +442,11 @@ void Application::Render(void)
     if (current_exercise == 4) {
         glEnable(GL_DEPTH_TEST);
         mshader->Enable();
-        //mshader->SetTexture("u_texture", mtexture);
+        camera->SetPerspective(45.0f, window_width / (float)window_height, 0.1f, 1000.0f);
+        camera->LookAt(Vector3(0, 1, 1), Vector3(0, 0, 0), Vector3(0, 1, 0));
+        mshader->SetTexture("u_texture", mtexture);
         leemesh->Render();
+		entity->Render(camera);
         mshader->Disable();
     }
 }
