@@ -443,7 +443,7 @@ void Application::Render(void)
         glEnable(GL_DEPTH_TEST);
         mshader->Enable();
         camera->SetPerspective(45.0f, window_width / (float)window_height, 0.1f, 1000.0f);
-        camera->LookAt(Vector3(0, 1, 1), Vector3(0, 0, 0), Vector3(0, 1, 0));
+        camera->LookAt(Vector3(0, 0.5, 1), Vector3(0, 0.25, 0), Vector3(0, 1, 0));
         mshader->SetTexture("u_texture", mtexture);
         leemesh->Render();
 		entity->Render(camera);
