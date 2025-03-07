@@ -26,14 +26,14 @@ Material::Material()
 void Material::Enable(const sUniformData& uniformData) {
     if (!matshader) return;  // Si no hay shader, no hacemos nada
 
-    // Habilitar el shader del material
+    
     matshader->Enable();
 
     // Subir las propiedades del material al shader
-    matshader->SetVector3("u_Ka", ambient);  // Componente ambiental
-    matshader->SetVector3("u_Kd", diffuse);  // Componente difusa
-    matshader->SetVector3("u_Ks", specular); // Componente especular
-    matshader->SetFloat("u_shininess", shininess);  // Brillo
+    matshader->SetVector3("u_Ka", ambient);  
+    matshader->SetVector3("u_Kd", diffuse); 
+    matshader->SetVector3("u_Ks", specular); 
+    matshader->SetFloat("u_shininess", shininess);  
 
     // Subir las propiedades de la luz al shader
     matshader->SetVector3("u_lightPosition", uniformData.light.position);

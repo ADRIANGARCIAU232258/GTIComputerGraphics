@@ -15,7 +15,7 @@ struct sUniformData
 {
     Matrix44 model;          // Matriz de modelo
     Matrix44 viewprojection; // Matriz de vista-proyección
-    Vector3 ambientLight;    // Intensidad de la luz ambiente
+    Vector3 ambientLight;   
 	sLight light;			// Datos de la luz
 };
 

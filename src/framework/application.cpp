@@ -224,7 +224,7 @@ uniform sampler2D u_texture;
 
 void main()
 {
-   vec2 tex_offset = vec2(0.005); // Controla el desenfoque
+   vec2 tex_offset = vec2(0.009); // Controla el desenfoque
     vec4 sum = texture2D(u_texture, v_uvs) * 0.4;
     sum += texture2D(u_texture, v_uvs + tex_offset) * 0.15;
     sum += texture2D(u_texture, v_uvs - tex_offset) * 0.15;
