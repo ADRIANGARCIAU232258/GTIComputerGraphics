@@ -26,6 +26,7 @@ public:
 	std::vector<Shader*> texshaders; // Declaramos el vector de shaders de texturas;
 	int current_shader; // Shader actual
 	int current_exercise; // Ejercicio actual
+	int current_lab; // Laboratorio actual
 
 	// Input
 	const Uint8* keystate;
@@ -55,7 +56,10 @@ public:
 	Matrix44 model;
 	Camera* camera;
 	Entity* entity;
-
+	sUniformData uniformData;
+	Shader* gourshader;
+	Material* gourmaterial;
+	sLight light;
 	// Constructor and main methods
 	Application(const char* caption, int width, int height);
 	~Application();

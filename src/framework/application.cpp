@@ -301,6 +301,7 @@ Application::Application(const char* caption, int width, int height)
 
 	current_shader = 0;
 	current_exercise = 0;
+    current_lab = 0;
 }
 
 Application::~Application()
@@ -309,18 +310,9 @@ Application::~Application()
 
 void Application::Init(void)
 {
-	Image* fruit = new Image();
-	if (!fruit->LoadPNG("images/fruits.png", true)) {
-		std::cerr << "Error: No se pudo cargar la imagen." << std::endl;
-		return;
-	}
 
-    Image* landscape = new Image();
-    if (!landscape->LoadPNG("images/landscape.png", true)) {
-        std::cerr << "Error: No se pudo cargar la imagen." << std::endl;
-        return;
-    }
 	std::cout << "Initiating app..." << std::endl;
+
 	quadshader = Shader::Get("shaders/quad.vs", "shaders/quad.fs");
 	quadmesh = new Mesh();
     leemesh = new Mesh();
@@ -331,14 +323,24 @@ void Application::Init(void)
     mshader = Shader::Get("shaders/raster.vs", "shaders/raster.fs");
     mtexture = Texture::Get("textures/lee_color_specular.tga");
 	leemesh->LoadOBJ("meshes/lee.obj");
+	gourshader = Shader::Get("shaders/gouraud.vs", "shaders/gouraud.fs");
+    gourmaterial = new Material();
+    gourmaterial->matshader = gourshader;
+    gourmaterial->ambient = Vector3(0.2f, 0.2f, 0.2f);  // Componente ambiental
+    gourmaterial->diffuse = Vector3(1.0f, 1.0f, 1.0f);  // Componente difusa
+    gourmaterial->specular = Vector3(1.0f, 1.0f, 1.0f); // Componente especular
+    gourmaterial->shininess = 32.0f;
     camera = new Camera();
     entity = new Entity();
     entity->mesh = leemesh;
     entity->shader = mshader;
     entity->texture = mtexture;
-
-
-
+	gourmaterial->mattexture = mtexture;
+    entity->model.SetIdentity();
+    entity->material = gourmaterial;
+    uniformData.model = Matrix44();
+	uniformData.viewprojection = Matrix44();
+    
 	// Compilamos todos los shaders y los guardamos en un vector
 
 	shaders.push_back(new Shader());
@@ -391,48 +393,73 @@ void Application::Init(void)
 // Render one frame
 void Application::Render(void)
 {
-	if (current_exercise == 1) {
-		glEnable(GL_DEPTH_TEST);
-		shaders[current_shader]->Enable();
-		// Declaramos la resolución de la ventana al shader
-		shaders[current_shader]->SetVector2("u_resolution", Vector2(static_cast<float>(this->window_width), static_cast<float>(this->window_height)));
-		quadmesh->Render();
-		shaders[current_shader]->Disable();
-	}
-	if (current_exercise == 2) {
-		glEnable(GL_DEPTH_TEST);
-		texshaders[current_shader]->Enable();
-		texshaders[current_shader]->SetTexture("u_texture", texture);
-		quadmesh->Render();
-		texshaders[current_shader]->Disable();
-	}
-    if (current_exercise == 3) {
-        glEnable(GL_DEPTH_TEST);
-        if (current_shader == 6 || current_shader == 7 || current_shader == 8) { // Incluyendo el shader original
+    if (current_lab == 0) {
+        if (current_exercise == 1) {
+            glEnable(GL_DEPTH_TEST);
+            shaders[current_shader]->Enable();
+            // Declaramos la resolución de la ventana al shader
+            shaders[current_shader]->SetVector2("u_resolution", Vector2(static_cast<float>(this->window_width), static_cast<float>(this->window_height)));
+            quadmesh->Render();
+            shaders[current_shader]->Disable();
+        }
+        if (current_exercise == 2) {
+            glEnable(GL_DEPTH_TEST);
             texshaders[current_shader]->Enable();
-            texshaders[current_shader]->SetTexture("u_texture", landscapeTexture);
-
-            if (current_shader == 6) { // Pixelación
-                texshaders[current_shader]->SetVector2("pixelSize", Vector2(0.025f, 0.025f)); // Tamaño de los píxeles
-            }
-            if (current_shader == 7) { // Deformación
-                float intensity = 1.0 * sin(time * 1.8); // Valor para ajustar la intensidad de la deformación
-                texshaders[current_shader]->SetFloat("intensity", intensity);
-
-            }
+            texshaders[current_shader]->SetTexture("u_texture", texture);
             quadmesh->Render();
             texshaders[current_shader]->Disable();
         }
+        if (current_exercise == 3) {
+            glEnable(GL_DEPTH_TEST);
+            if (current_shader == 6 || current_shader == 7 || current_shader == 8) { // Incluyendo el shader original
+                texshaders[current_shader]->Enable();
+                texshaders[current_shader]->SetTexture("u_texture", landscapeTexture);
+
+                if (current_shader == 6) { // Pixelación
+                    texshaders[current_shader]->SetVector2("pixelSize", Vector2(0.025f, 0.025f)); // Tamaño de los píxeles
+                }
+                if (current_shader == 7) { // Deformación
+                    float intensity = 1.0 * sin(time * 1.8); // Valor para ajustar la intensidad de la deformación
+                    texshaders[current_shader]->SetFloat("intensity", intensity);
+
+                }
+                quadmesh->Render();
+                texshaders[current_shader]->Disable();
+            }
+        }
+        if (current_exercise == 4) {
+			glEnable(GL_DEPTH_TEST);
+            mshader->Enable();
+            camera->SetPerspective(45.0f, window_width / (float)window_height, 0.1f, 1000.0f);
+            camera->LookAt(Vector3(0, 0.5, 1), Vector3(0, 0.25, 0), Vector3(0, 1, 0));
+            mshader->SetTexture("u_texture", mtexture);
+            leemesh->Render();
+            entity->Render(camera);
+            mshader->Disable();
+        }
     }
-    if (current_exercise == 4) {
+    else {
         glEnable(GL_DEPTH_TEST);
-        mshader->Enable();
+
+        // Configurar la cámara
         camera->SetPerspective(45.0f, window_width / (float)window_height, 0.1f, 1000.0f);
         camera->LookAt(Vector3(0, 0.5, 1), Vector3(0, 0.25, 0), Vector3(0, 1, 0));
-        mshader->SetTexture("u_texture", mtexture);
-        leemesh->Render();
-		entity->Render(camera);
-        mshader->Disable();
+
+        // Configurar las matrices
+        uniformData.model = entity->GetModelMatrix();
+        uniformData.viewprojection = camera->GetViewProjectionMatrix();
+
+        // Configurar las propiedades de la luz
+        uniformData.light.position = Vector3(1.0f, 1.0f, 1.0f);  // Posición de la luz
+        uniformData.light.color = Vector3(1.0f, 1.0f, 1.0f);     // Color de la luz (blanco)
+        uniformData.ambientLight = Vector3(0.5f, 0.5f, 0.5f);
+        // Intensidad de la luz ambiental
+        gourmaterial->Enable(uniformData);
+        entity->Render(uniformData);
+        // Renderizar la entidad
+        gourmaterial->Disable();
+
+        glDisable(GL_DEPTH_TEST);
     }
 }
 
@@ -456,6 +483,9 @@ void Application::OnKeyPressed(SDL_KeyboardEvent event)
     case SDLK_KP_3: current_exercise = 3; current_shader = 8; break;
 	case SDLK_4:
 	case SDLK_KP_4: current_exercise = 4; break;
+    case SDLK_l: current_lab = (current_lab == 0)? 1 : 0; 
+    std::cout << "LAB" << ((current_lab == 0) ? "4 ACTIVO" : "5 ACTIVO") << std::endl;
+        break;
     default:
         if (current_exercise == 1) {
             switch (event.keysym.sym) {
